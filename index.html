@@ -69,8 +69,8 @@
         // --- 請務必填入你的 Supabase 資訊 ---
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co'; // 替換這裡
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN6enBveWx1b29leG1zaGNtcG1rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0NDAwMTYsImV4cCI6MjA4MzAxNjAxNn0.q0obzd-DJXV9NCINli756Ao6-LJ9BIkeHM9MiGECCFk';           // 替換這裡
-        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
         const characters = [
             { name: '懶石頭', req: 0, img: 'https://cdn-icons-png.flaticon.com/512/2602/2602465.png' },
             { name: '雲朵雞', req: 100, img: 'https://cdn-icons-png.flaticon.com/512/2663/2663067.png' },
@@ -85,14 +85,15 @@
         ];
 
         async function fetchData() {
-            const { data: logs, error } = await db.from('meditation_logs').select('*').order('created_at', { ascending: false });
-            if(error) return;
+    // 這裡改用 client.from
+    const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
+    if(error) return;
 
-            const userScores = {};
-            logs.forEach(l => userScores[l.username] = (userScores[l.username] || 0) + l.coins);
-            
-            updateUI(logs, userScores);
-        }
+    const userScores = {};
+    logs.forEach(l => userScores[l.username] = (userScores[l.username] || 0) + l.coins);
+    
+    updateUI(logs, userScores);
+}
 
         function updateUI(logs, userScores) {
             // 排行榜
@@ -138,27 +139,30 @@
         }
 
         async function saveRecord() {
-            const username = document.getElementById('username').value.trim();
-            const minutes = parseInt(document.getElementById('minutes').value);
-            const note = document.getElementById('note').value;
-            
-            if(!username || !minutes) return alert('名字跟分鐘數都要填喔！');
-            
-            let coins = 0;
-            if (minutes >= 40) coins = 40;
-            else if (minutes >= 30) coins = 20;
-            else if (minutes >= 20) coins = 10;
-            else return alert('禪定未滿 20 分鐘，還不能產生幣喔，再堅持一下！');
+    const username = document.getElementById('username').value.trim();
+    const minutes = parseInt(document.getElementById('minutes').value);
+    const note = document.getElementById('note').value;
+    
+    if(!username || !minutes) return alert('名字跟分鐘數都要填喔！');
+    
+    let coins = 0;
+    if (minutes >= 40) coins = 40;
+    else if (minutes >= 30) coins = 20;
+    else if (minutes >= 20) coins = 10;
+    else return alert('禪定未滿 20 分鐘，還不能產生幣喔，再堅持一下！');
 
-            const { error } = await supabase.from('meditation_logs').insert([{ username, minutes, note, coins }]);
-            if(error) alert('儲存失敗：' + error.message);
-            else {
-                alert(`圓滿成功！獲得了 ${coins} 枚禪定幣！`);
-                document.getElementById('minutes').value = '';
-                document.getElementById('note').value = '';
-                fetchData();
-            }
-        }
+    // 重點在這裡：改用 client.from
+    const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
+    
+    if(error) {
+        alert('儲存失敗：' + error.message);
+    } else {
+        alert(`圓滿成功！獲得了 ${coins} 枚禪定幣！`);
+        document.getElementById('minutes').value = '';
+        document.getElementById('note').value = '';
+        fetchData(); 
+    }
+}
 
         document.getElementById('username').addEventListener('input', fetchData);
         setInterval(fetchData, 10000); // 每10秒同步一次
