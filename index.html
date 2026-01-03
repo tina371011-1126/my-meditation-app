@@ -46,6 +46,12 @@
         }
         .modal-content { animation: modalShow 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-rotate { animation: rotate 10s linear infinite; }
+
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -57,6 +63,22 @@
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
+
+    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95 overflow-hidden">
+            <div class="absolute inset-0 opacity-10 animate-rotate pointer-events-none">
+                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-transparent"></div>
+            </div>
+            <div class="relative z-10">
+                <div class="text-5xl mb-4">✨</div>
+                <h2 class="text-2xl font-black text-emerald-800 mb-2">能量注入成功！</h2>
+                <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點森林能量</p>
+                <button onclick="closeSuccessModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">確認</button>
+            </div>
+        </div>
+    </div>
+
     <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
         <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95">
@@ -89,7 +111,7 @@
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
             <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
-                <span>🌱 種子</span><span>🌳 守護大樹</span>
+                <span>🌱 種子</span><span>🌲 守護森林</span>
             </div>
         </div>
 
@@ -100,17 +122,32 @@
                     <input type="text" id="username" placeholder="輸入名字" class="w-full p-3 text-sm outline-none" oninput="startMusic(); fetchData();">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">禪定時間(分)</label>
-                    <input type="number" id="minutes" placeholder="分鐘" class="w-full p-3 text-sm outline-none">
+                    <label class="text-[11px] font-bold text-emerald-900 ml-1">禪定時間(分鐘)</label>
+                    <input type="number" id="minutes" placeholder="分鐘(請填數字)" class="w-full p-3 text-sm outline-none">
                 </div>
             </div>
             <div class="space-y-1">
                 <label class="text-[11px] font-bold text-emerald-900 ml-1">今日禪定心得 (必填)</label>
                 <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 outline-none"></textarea>
             </div>
-            <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest">
-                送出紀錄 ‧ 注入能量
+            <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest mb-2">
+                送出禪定紀錄 ‧ 注入森林能量
             </button>
+
+            <div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-4 text-[11px] leading-relaxed">
+                <h3 class="font-bold text-emerald-900 mb-2 flex items-center">
+                    <span class="mr-1">🌲</span> 提升森林能量說明 <span>🌲</span>
+                </h3>
+                <ul class="space-y-1 text-emerald-800">
+                    <li>1. 每天禪定 <span class="font-bold">10</span> 分鐘得 <span class="font-bold italic">5</span> 點森林能量</li>
+                    <li>2. 每天禪定 <span class="font-bold">20</span> 分鐘得 <span class="font-bold italic">10</span> 點森林能量</li>
+                    <li>3. 每天禪定 <span class="font-bold">30</span> 分鐘得 <span class="font-bold italic">20</span> 點森林能量</li>
+                    <li>4. 每天禪定 <span class="font-bold">40</span> 分鐘(含)以上得 <span class="font-bold italic">40</span> 點森林能量</li>
+                </ul>
+                <p class="mt-2 text-emerald-600 font-medium">
+                    ** 解鎖角色以 100 點能量為單位，最高獲得 900 點能量以上可以解鎖神秘角色 🧞
+                </p>
+            </div>
         </div>
 
         <div class="space-y-4">
@@ -122,7 +159,7 @@
 
         <div class="grid grid-cols-1 gap-6">
             <div class="card p-5">
-                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 禪定能量累積榜</h2>
+                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 森林能量累積榜</h2>
                 <div id="leaderboard" class="space-y-2 text-xs"></div>
             </div>
 
@@ -213,7 +250,7 @@
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
-            if(!username || !minutes || !note) return alert('請完整填寫資訊');
+            if(!username || isNaN(minutes) || !note) return alert('請完整填寫資訊或填寫格式不對');
 
             const currentScore = cachedUserScores[username] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
@@ -222,7 +259,8 @@
             if (minutes >= 40) coins = 40;
             else if (minutes >= 30) coins = 20;
             else if (minutes >= 20) coins = 10;
-            else return alert('最少需禪定 20 分鐘喔！');
+            else if (minutes >= 10) coins = 5;
+            else return alert('最少需禪定 10 分鐘喔！');
 
             const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
             
@@ -233,12 +271,22 @@
                 if (afterLevel > beforeLevel) {
                     showEvoModal(characters[afterLevel - 1]);
                 } else {
-                    alert(`注入成功！獲得了 ${coins} 點能量。`);
+                    // 第二點：使用華麗浮層顯示注入成功
+                    showSuccessModal(coins);
                 }
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 fetchData();
             }
+        }
+
+        function showSuccessModal(coins) {
+            document.getElementById('successCoins').innerText = coins;
+            document.getElementById('successModal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
         }
 
         function showEvoModal(spirit) {
