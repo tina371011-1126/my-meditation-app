@@ -15,7 +15,6 @@
             color: #f0f9ff; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
         }
-        
         .card { 
             background: rgba(255, 255, 255, 0.25); 
             backdrop-filter: blur(15px);
@@ -23,26 +22,19 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
-
         .progress-fill { height: 100%; background: linear-gradient(90deg, #60a5fa, #c084fc); transition: width 1s ease-in-out; }
-        
         input, textarea { 
             background: rgba(255, 255, 255, 0.4) !important; 
-            color: #111827 !important; /* 加深輸入文字顏色 */
+            color: #111827 !important; 
             border: 1px solid rgba(255, 255, 255, 0.5) !important;
             border-radius: 16px !important;
         }
-        
-        /* 1. 修正：提示字改成深灰黑色 */
         input::placeholder, textarea::placeholder { 
             color: #374151 !important; 
             opacity: 1;
         }
-
-        .navy-text { color: #000080; }
-
+        .navy-text { color: #000080; text-decoration: none !important; }
         .history-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; }
-        
         @keyframes gentle-bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-5px); }
@@ -149,7 +141,7 @@
             const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
                 <div class="flex justify-between p-2 bg-white/30 rounded-lg mb-1">
-                    <span class="${n === name ? 'font-black underline' : ''}">${i+1}. ${n}</span>
+                    <span class="${n === name ? 'font-black' : 'font-medium'}">${i+1}. ${n}</span>
                     <span class="font-bold">${s} 幣</span>
                 </div>
             `).join('') || '尚未有修行紀錄';
@@ -168,7 +160,6 @@
                 </div>
             `).join('');
 
-            // 2. 修正：修煉日誌加上日期與時間
             document.getElementById('historyLogs').innerHTML = logs.map(l => {
                 const date = new Date(l.created_at);
                 const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
@@ -188,10 +179,8 @@
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
-
-            // 3. 修正：心得欄位沒填不能送出
             if(!username || !minutes) return alert('請填寫完整資訊');
-            if(!note) return alert('請寫下此刻的心得再送出喔！靜心也是需要紀錄的～');
+            if(!note) return alert('請寫下此刻的心得再送出喔！');
 
             const oldScore = cachedUserScores[username] || 0;
             const oldLevelCount = characters.filter(c => oldScore >= c.req).length;
@@ -217,7 +206,6 @@
                 fetchData();
             }
         }
-
         setInterval(fetchData, 10000);
         fetchData();
     </script>
