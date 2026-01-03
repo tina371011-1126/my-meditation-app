@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寒假禪定打卡平台 - 夢幻星空版</title>
+    <title>台科領寒假禪定打卡平台 - 夢幻星空版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
-            background: url('https://i.pinimg.com/474x/4e/dd/bc/4eddbc60fdb23239abfccb073e2c98f9.jpg');
+            /* 更新背景圖網址 */
+            background: url('https://pic.616pic.com/bg_w1180/00/02/35/6mTv1yqrHS.jpg');
             background-size: cover;
             background-position: center;
             background-attachment: fixed;
@@ -33,6 +34,7 @@
             color: #374151 !important; 
             opacity: 1;
         }
+        /* 海軍藍榜單文字，確保無底線 */
         .navy-text { color: #000080; text-decoration: none !important; }
         .history-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; }
         @keyframes gentle-bounce {
@@ -49,8 +51,8 @@
 
     <div class="max-w-md mx-auto space-y-6">
         <header class="text-center py-6">
-            <h1 class="text-3xl font-black tracking-widest text-white drop-shadow-lg">寒假禪定打卡平台</h1>
-            <p class="text-xs text-sky-200 mt-2 opacity-90 italic">♫ 點擊或輸入即可開啟靜心旋律</p>
+            <h1 class="text-3xl font-black tracking-widest text-white drop-shadow-lg">台科領寒假禪定打卡平台</h1>
+            <p class="text-xs text-sky-200 mt-2 opacity-90 italic">♫ 沉澱好自己的心一起來填寫日記！</p>
         </header>
 
         <div class="card p-6 text-center">
@@ -66,7 +68,7 @@
         <div class="card p-6 space-y-4">
             <div class="space-y-1">
                 <label class="text-xs font-bold text-white ml-1">你是誰～</label>
-                <input type="text" id="username" placeholder="輸入名字同步進度" class="w-full p-4 outline-none" oninput="startMusic(); fetchData();">
+                <input type="text" id="username" placeholder="輸入相同名字同步進度" class="w-full p-4 outline-none" oninput="startMusic(); fetchData();">
             </div>
             <div class="space-y-1">
                 <label class="text-xs font-bold text-white ml-1">禪定幾分鐘？</label>
@@ -80,17 +82,17 @@
         </div>
 
         <div class="space-y-4">
-            <h2 class="font-bold text-white text-lg ml-2 flex items-center gap-2">✨ 已覺醒靈獸</h2>
+            <h2 class="font-bold text-white text-lg ml-2 flex items-center gap-2">✨ 已覺醒精靈</h2>
             <div id="unlockedGrid" class="grid grid-cols-3 gap-3"></div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">🏆 修行榜單</h2>
+            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">🏆 禪定習慣養成榜</h2>
             <div id="leaderboard" class="space-y-3 text-sm navy-text"></div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">📖 修煉日誌</h2>
+            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">📖 勇者們的禪定日誌</h2>
             <div id="historyLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 text-sm navy-text"></div>
         </div>
     </div>
