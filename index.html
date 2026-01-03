@@ -3,46 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寒假禪定打卡平台 - 夢幻粉紫版</title>
+    <title>寒假禪定打卡平台 - 夢幻星空版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { 
-            --primary-purple: #9d8df1;
-            --soft-pink: #fbc2eb;
-            --soft-blue: #a6c1ee;
-        }
-        
-        /* 模擬指定網址的粉紫漸層背景 */
+        /* 使用你提供的星空圖片作為背景 */
         body { 
-            background: linear-gradient(180deg, #fbc2eb 0%, #a6c1ee 100%);
+            background: url('https://i.pinimg.com/474x/4e/dd/bc/4eddbc60fdb23239abfccb073e2c98f9.jpg');
+            background-size: cover;
+            background-position: center;
             background-attachment: fixed;
-            color: #4b3f72; 
+            color: #f0f9ff; 
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
         }
         
         .card { 
-            background: rgba(255, 255, 255, 0.45); 
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(15px);
             border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 8px 32px rgba(157, 141, 241, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
-        .progress-fill { height: 100%; background: linear-gradient(90deg, #9d8df1, #fbc2eb); transition: width 1s ease-in-out; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #60a5fa, #c084fc); transition: width 1s ease-in-out; }
         
         input, textarea { 
-            background: rgba(255, 255, 255, 0.6) !important; 
-            color: #4b3f72 !important; 
-            border: 1px solid rgba(157, 141, 241, 0.3) !important;
+            background: rgba(255, 255, 255, 0.1) !important; 
+            color: white !important; 
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
             border-radius: 16px !important;
         }
         
-        input::placeholder, textarea::placeholder { color: #8e82b3; }
+        input::placeholder, textarea::placeholder { color: #cbd5e1; }
 
-        .history-item { border-bottom: 1px solid rgba(157, 141, 241, 0.2); padding-bottom: 1rem; }
+        .history-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; }
         
-        /* 讓解鎖靈獸跳動更有節奏感 */
         @keyframes gentle-bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-5px); }
@@ -57,37 +52,40 @@
 
     <div class="max-w-md mx-auto space-y-6">
         <header class="text-center py-6">
-            <h1 class="text-3xl font-black tracking-widest text-[#6d5cae] drop-shadow-sm">寒假禪定打卡平台</h1>
-            <p class="text-xs text-[#8e82b3] mt-2 italic font-bold">♫ 輕觸或輸入即可開啟靜心旋律</p>
+            <h1 class="text-3xl font-black tracking-widest text-white drop-shadow-lg">寒假禪定打卡平台</h1>
+            <p class="text-xs text-sky-200 mt-2 opacity-90 italic">♫ 點擊或輸入即可開啟靜心旋律</p>
         </header>
 
         <div class="card p-6 text-center">
-            <div id="rankDisplay" class="text-sm font-bold mb-3 text-[#6d5cae] italic">連線中...</div>
-            <div class="h-3 w-full bg-white/30 rounded-full overflow-hidden border border-white/50">
+            <div id="rankDisplay" class="text-sm font-bold mb-3 text-sky-100 italic">連線雲端中...</div>
+            <div class="h-3 w-full bg-black/20 rounded-full overflow-hidden border border-white/30">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-sky-300 font-bold">
+                <span>初心</span><span>彼岸</span>
             </div>
         </div>
 
         <div class="card p-6 space-y-4">
-            <input type="text" id="username" placeholder="你是誰～" class="w-full p-4 outline-none" onfocus="startMusic()">
-            <input type="number" id="minutes" placeholder="禪定幾分鐘？" class="w-full p-4 outline-none" onfocus="startMusic()">
-            <textarea id="note" placeholder="寫下修煉心得..." class="w-full p-4 outline-none h-24" onfocus="startMusic()"></textarea>
-            <button onclick="saveRecord()" class="w-full bg-[#9d8df1] hover:bg-[#8a79e0] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">送出紀錄，累積能量</button>
+            <input type="text" id="username" placeholder="你是誰～" class="w-full p-4 outline-none" oninput="startMusic(); fetchData();">
+            <input type="number" id="minutes" placeholder="禪定幾分鐘？" class="w-full p-4 outline-none">
+            <textarea id="note" placeholder="寫下修煉心得..." class="w-full p-4 outline-none h-24"></textarea>
+            <button onclick="saveRecord()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">送出紀錄，能量進化</button>
         </div>
 
         <div class="space-y-4">
-            <h2 class="font-bold text-[#6d5cae] text-lg ml-2 flex items-center gap-2">✨ 已覺醒靈獸</h2>
+            <h2 class="font-bold text-white text-lg ml-2 flex items-center gap-2">✨ 已覺醒靈獸</h2>
             <div id="unlockedGrid" class="grid grid-cols-3 gap-3"></div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 text-[#6d5cae] border-b border-[#9d8df1]/30 pb-2 flex justify-between">🏆 修行功德榜</h2>
-            <div id="leaderboard" class="space-y-3 text-sm text-[#4b3f72]"></div>
+            <h2 class="font-bold mb-4 text-sky-100 border-b border-white/20 pb-2">🏆 修行榜單</h2>
+            <div id="leaderboard" class="space-y-3 text-sm"></div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 text-[#6d5cae] border-b border-[#9d8df1]/30 pb-2">📖 修煉日誌</h2>
-            <div id="historyLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 text-sm text-[#4b3f72]"></div>
+            <h2 class="font-bold mb-4 text-sky-100 border-b border-white/20 pb-2">📖 修煉日誌</h2>
+            <div id="historyLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 text-sm"></div>
         </div>
     </div>
 
@@ -110,96 +108,91 @@
             { name: '星系主', req: 900, img: 'https://cdn-icons-png.flaticon.com/512/2534/2534064.png' }
         ];
 
-        let currentUserScores = {};
+        let cachedUserScores = {};
         let musicStarted = false;
 
-        // 音樂啟動機制：點擊、觸摸或聚焦輸入框皆會啟動
         function startMusic() {
             if (!musicStarted) {
-                const music = document.getElementById('bgMusic');
-                music.play().then(() => {
-                    musicStarted = true;
-                }).catch(e => console.log("等待手動觸發音樂"));
+                document.getElementById('bgMusic').play().then(() => { musicStarted = true; }).catch(() => {});
             }
         }
         window.addEventListener('click', startMusic);
-        window.addEventListener('touchstart', startMusic);
 
         async function fetchData() {
             const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
-            if(error) return;
+            if(error) { console.error("同步失敗:", error); return; }
 
-            currentUserScores = {};
-            logs.forEach(l => currentUserScores[l.username] = (userScores[l.username] || 0) + l.coins);
-            // 由於上面變數打錯，修正為：
+            cachedUserScores = {};
             logs.forEach(l => {
-                currentUserScores[l.username] = (currentUserScores[l.username] || 0) + l.coins;
+                cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins;
             });
-            
-            updateUI(logs, currentUserScores);
+            updateUI(logs, cachedUserScores);
         }
 
         function updateUI(logs, userScores) {
             const name = document.getElementById('username').value.trim();
             const myScore = userScores[name] || 0;
 
+            // 1. 排行榜
             const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
-                <div class="flex justify-between items-center bg-white/20 p-2 rounded-lg mb-1">
-                    <span class="${n === name ? 'text-[#9d8df1] font-bold' : ''}">${i+1}. ${n}</span>
-                    <span class="font-mono text-[#6d5cae]">${s} 幣</span>
+                <div class="flex justify-between p-2 bg-white/10 rounded-lg mb-1">
+                    <span class="${n === name ? 'text-blue-300 font-bold' : ''}">${i+1}. ${n}</span>
+                    <span>${s} 幣</span>
                 </div>
             `).join('');
 
+            // 2. 進度條
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerHTML = name ? (myScore >= 900 ? `✨ 已達成最終進化：星系主` : `距離進化還差 ${next.req - myScore} 幣`) : "同步修行中...";
+            document.getElementById('rankDisplay').innerHTML = name ? 
+                (myScore >= 900 ? `✨ 已覺醒：星系主` : `距離進化還差 ${next.req - myScore} 幣`) : "同步修行中...";
 
+            // 3. 圖鑑 (只呈現象解鎖的)
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
-                <div class="card p-3 flex flex-col items-center bg-white/40 border-white/60 unlocked-pet">
-                    <img src="${c.img}" class="w-10 h-10 mb-2 drop-shadow-sm">
-                    <span class="text-[10px] font-bold text-[#6d5cae]">${c.name}</span>
+                <div class="card p-3 flex flex-col items-center unlocked-pet">
+                    <img src="${c.img}" class="w-10 h-10 mb-2">
+                    <span class="text-[10px] font-bold text-white">${c.name}</span>
                 </div>
             `).join('');
 
+            // 4. 日誌
             document.getElementById('historyLogs').innerHTML = logs.map(l => `
                 <div class="history-item mt-4">
-                    <div class="flex justify-between items-center font-bold text-[#6d5cae]">
-                        <span>${l.username}</span>
-                        <span class="text-[10px] bg-[#9d8df1]/30 px-2 py-0.5 rounded text-[#4b3f72]">${l.coins} 幣</span>
+                    <div class="flex justify-between items-center text-blue-200 font-bold">
+                        <span>${l.username}</span><span>${l.coins} 幣</span>
                     </div>
-                    <p class="mt-2 text-[#4b3f72] italic bg-white/30 p-2 rounded-lg">"${l.note || '靜默修行中...'}"</p>
+                    <p class="mt-2 bg-black/20 p-2 rounded-lg italic">"${l.note || '靜修中...'}"</p>
                 </div>
             `).join('');
         }
 
         async function saveRecord() {
-            startMusic(); // 點擊送出也嘗試啟動音樂
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value;
-            if(!username || !minutes) return alert('請填寫完整喔');
+            if(!username || !minutes) return alert('請填寫完整資訊');
 
-            const oldScore = currentUserScores[username] || 0;
+            const oldScore = cachedUserScores[username] || 0;
             const oldLevelCount = characters.filter(c => oldScore >= c.req).length;
 
             let coins = 0;
             if (minutes >= 40) coins = 40;
             else if (minutes >= 30) coins = 20;
             else if (minutes >= 20) coins = 10;
-            else return alert('時間不足20分鐘，無法產生成果');
+            else return alert('時間不足 20 分鐘');
 
             const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
-            if(error) alert('上傳失敗');
+            if(error) alert('儲存失敗');
             else {
                 const newScore = oldScore + coins;
                 const newLevelCount = characters.filter(c => newScore >= c.req).length;
                 if (newLevelCount > oldLevelCount) {
-                    alert(`🎊 恭喜！你已覺醒為：【${characters[newLevelCount-1].name}】！`);
+                    alert(`🎊 恭喜！你已成功覺醒為：【${characters[newLevelCount-1].name}】！`);
                 } else {
-                    alert(`紀錄成功！獲得了 ${coins} 枚禪定幣。`);
+                    alert(`紀錄成功！獲得了 ${coins} 枚幣。`);
                 }
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
@@ -207,7 +200,6 @@
             }
         }
 
-        document.getElementById('username').addEventListener('input', fetchData);
         setInterval(fetchData, 10000);
         fetchData();
     </script>
