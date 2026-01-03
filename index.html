@@ -3,69 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定修煉場</title>
+    <title>寒假禪定打卡平台</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .card { border-radius: 24px; transition: all 0.3s ease; }
-        .locked { filter: grayscale(1); opacity: 0.5; }
+        :root { --primary: #8da399; --accent: #d4a373; --bg: #fefae0; }
+        body { background-color: var(--bg); color: #434b42; font-family: sans-serif; }
+        .card { background: #ffffff; border-radius: 28px; border: 1px solid #e9edc9; box-shadow: 0 4px 15px rgba(141,163,153,0.1); }
+        .progress-fill { height: 100%; background: var(--accent); transition: width 0.8s ease-in-out; }
+        .locked { filter: grayscale(1) contrast(0.5); opacity: 0.3; }
+        .history-item { border-bottom: 1px solid #f0f2e8; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4">
+<body class="min-h-screen p-4 pb-20">
     <div class="max-w-md mx-auto space-y-6">
-        <div class="bg-white p-6 card shadow-sm border border-slate-100 flex justify-between items-center">
-            <div>
-                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">修煉點數</p>
-                <h1 id="totalPoints" class="text-4xl font-black text-indigo-600">0</h1>
+        
+        <header class="text-center py-6">
+            <h1 class="text-2xl font-black text-slate-700 tracking-[0.2em]">寒假禪定打卡平台</h1>
+            <p class="text-sm text-slate-500 mt-2 italic">「靜心一刻，靈魂便進化一分」</p>
+        </header>
+
+        <div class="card p-6">
+            <div id="rankDisplay" class="text-sm font-bold mb-3 text-slate-600">請輸入名字查看修行進度...</div>
+            <div class="h-4 w-full bg-stone-100 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
-            <div class="text-3xl">🏆</div>
+            <p class="text-[10px] text-stone-400 mt-2">提示：20分得10幣 / 30分得20幣 / 40分得40幣</p>
         </div>
 
-        <div class="bg-white p-6 card shadow-sm border border-slate-100">
-            <h2 class="font-bold mb-4 text-slate-700">今日紀錄</h2>
-            <input type="number" id="minutes" placeholder="分鐘數" class="w-full mb-3 p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400">
-            <textarea id="note" placeholder="今日心得..." class="w-full mb-3 p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
-            <button onclick="saveMeditation()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition">送出並賺點數</button>
+        <div class="card p-6 space-y-4">
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-stone-500 ml-1">你是誰～</label>
+                <input type="text" id="username" placeholder="每次填寫需相同喔" class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300">
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-stone-500 ml-1">禪定時間 (分鐘)</label>
+                <input type="number" id="minutes" placeholder="例如：40" class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300">
+            </div>
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-stone-500 ml-1">今日修煉心得</label>
+                <textarea id="note" placeholder="寫下感受..." class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300 h-24"></textarea>
+            </div>
+            <button onclick="saveRecord()" class="w-full bg-[#8da399] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">送出紀錄，獲取禪定幣</button>
         </div>
 
-        <div>
-            <h2 class="font-bold mb-4 text-slate-700">角色圖鑑</h2>
-            <div id="characterGrid" class="grid grid-cols-2 gap-4"></div>
+        <div class="card p-6">
+            <h2 class="font-bold mb-4 text-emerald-800 flex justify-between items-center">
+                🏆 禪定幣排行榜 <span class="text-[10px] bg-emerald-100 px-2 py-1 rounded-full text-emerald-600">全體同步</span>
+            </h2>
+            <div id="leaderboard" class="space-y-2"></div>
+        </div>
+
+        <div class="space-y-4">
+            <h2 class="font-bold text-emerald-800 ml-2 text-lg">🌿 靈魂進化圖鑑</h2>
+            <div id="characterGrid" class="grid grid-cols-3 gap-3"></div>
+        </div>
+
+        <div class="card p-6">
+            <h2 class="font-bold mb-4 text-emerald-800">📖 修煉日誌</h2>
+            <div id="historyLogs" class="space-y-4 max-h-80 overflow-y-auto pr-2"></div>
         </div>
     </div>
 
     <script>
-        let points = parseInt(localStorage.getItem('points')) || 0;
+        // --- 請務必填入你的 Supabase 資訊 ---
+        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co'; // 替換這裡
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';           // 替換這裡
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
         const characters = [
-            { name: '小沙彌', req: 0, icon: '🌱' },
-            { name: '行者', req: 100, icon: '🚶' },
-            { name: '禪師', req: 500, icon: '🧘' },
-            { name: '尊者', req: 1000, icon: '✨' }
+            { name: '懶石頭', req: 0, img: 'https://cdn-icons-png.flaticon.com/512/2602/2602465.png' },
+            { name: '雲朵雞', req: 100, img: 'https://cdn-icons-png.flaticon.com/512/2663/2663067.png' },
+            { name: '綠毛蟲', req: 200, img: 'https://cdn-icons-png.flaticon.com/512/805/805404.png' },
+            { name: '波波貓', req: 300, img: 'https://cdn-icons-png.flaticon.com/512/616/616430.png' },
+            { name: '狐狸仙', req: 400, img: 'https://cdn-icons-png.flaticon.com/512/235/235880.png' },
+            { name: '鹿角獸', req: 500, img: 'https://cdn-icons-png.flaticon.com/512/2219/2219774.png' },
+            { name: '獨角鯨', req: 600, img: 'https://cdn-icons-png.flaticon.com/512/2040/2040510.png' },
+            { name: '大白龍', req: 700, img: 'https://cdn-icons-png.flaticon.com/512/616/616606.png' },
+            { name: '火鳳凰', req: 800, img: 'https://cdn-icons-png.flaticon.com/512/2026/2026462.png' },
+            { name: '星系主', req: 900, img: 'https://cdn-icons-png.flaticon.com/512/2534/2534064.png' }
         ];
 
-        function updateUI() {
-            document.getElementById('totalPoints').innerText = points;
-            const grid = document.getElementById('characterGrid');
-            grid.innerHTML = characters.map(c => `
-                <div class="bg-white p-4 card border flex flex-col items-center ${points >= c.req ? 'border-indigo-200' : 'locked'}">
-                    <span class="text-4xl mb-2">${points >= c.req ? c.icon : '🔒'}</span>
-                    <span class="text-sm font-bold text-slate-600">${c.name}</span>
-                    <span class="text-xs text-slate-400">${c.req} pts</span>
+        async function fetchData() {
+            const { data: logs, error } = await supabase.from('meditation_logs').select('*').order('created_at', { ascending: false });
+            if(error) return;
+
+            const userScores = {};
+            logs.forEach(l => userScores[l.username] = (userScores[l.username] || 0) + l.coins);
+            
+            updateUI(logs, userScores);
+        }
+
+        function updateUI(logs, userScores) {
+            // 排行榜
+            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.map(([name, score], i) => `
+                <div class="flex justify-between p-3 bg-stone-50 rounded-xl text-sm border border-stone-100">
+                    <span class="font-medium">${i+1}. ${name}</span>
+                    <span class="font-bold text-emerald-700">${score} 幣</span>
+                </div>
+            `).join('') || '<p class="text-center text-stone-400 text-xs">目前還沒有人上榜...</p>';
+
+            // 進度條
+            const name = document.getElementById('username').value.trim();
+            const myScore = userScores[name] || 0;
+            const next = characters.find(c => c.req > myScore) || characters[9];
+            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
+            
+            document.getElementById('progressBarFill').style.width = prog + '%';
+            document.getElementById('rankDisplay').innerHTML = name ? 
+                (myScore >= 900 ? `⭐ 已達成最終境界！` : `距離進化到 <b>${next.name}</b> 還差 ${next.req - myScore} 幣`) 
+                : "輸入名字查看修行進度...";
+
+            // 角色圖鑑 (3欄)
+            document.getElementById('characterGrid').innerHTML = characters.map(c => `
+                <div class="card p-3 flex flex-col items-center border-2 transition-all ${myScore >= c.req ? 'border-emerald-200' : 'locked border-transparent'}">
+                    <img src="${c.img}" class="w-10 h-10 mb-2 object-contain">
+                    <span class="text-[10px] font-bold text-stone-600">${c.name}</span>
+                    <span class="text-[8px] text-stone-400">${c.req} 幣</span>
                 </div>
             `).join('');
+
+            // 修煉日誌
+            document.getElementById('historyLogs').innerHTML = logs.map(l => `
+                <div class="history-item pb-4">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="font-bold text-sm text-emerald-800">${l.username}</span>
+                        <span class="text-[10px] text-stone-400">${new Date(l.created_at).toLocaleString()}</span>
+                    </div>
+                    <div class="text-[11px] text-stone-500 mb-2 underline decoration-emerald-100 decoration-2">禪定 ${l.minutes} 分鐘 / 獲得 ${l.coins} 幣</div>
+                    <p class="text-xs text-stone-600 leading-relaxed bg-stone-50 p-2 rounded-lg italic">"${l.note || '無心得'}"</p>
+                </div>
+            `).join('') || '<p class="text-center text-stone-400 text-xs py-4">等待第一份修煉筆記...</p>';
         }
 
-        function saveMeditation() {
-            const min = document.getElementById('minutes').value;
-            if(!min) return alert('請輸入分鐘數');
-            points += min * 10;
-            localStorage.setItem('points', points);
-            updateUI();
-            document.getElementById('minutes').value = '';
-            document.getElementById('note').value = '';
-            alert('功德圓滿！點數已入帳');
+        async function saveRecord() {
+            const username = document.getElementById('username').value.trim();
+            const minutes = parseInt(document.getElementById('minutes').value);
+            const note = document.getElementById('note').value;
+            
+            if(!username || !minutes) return alert('名字跟分鐘數都要填喔！');
+            
+            let coins = 0;
+            if (minutes >= 40) coins = 40;
+            else if (minutes >= 30) coins = 20;
+            else if (minutes >= 20) coins = 10;
+            else return alert('禪定未滿 20 分鐘，還不能產生幣喔，再堅持一下！');
+
+            const { error } = await supabase.from('meditation_logs').insert([{ username, minutes, note, coins }]);
+            if(error) alert('儲存失敗：' + error.message);
+            else {
+                alert(`圓滿成功！獲得了 ${coins} 枚禪定幣！`);
+                document.getElementById('minutes').value = '';
+                document.getElementById('note').value = '';
+                fetchData();
+            }
         }
 
-        updateUI();
+        document.getElementById('username').addEventListener('input', fetchData);
+        setInterval(fetchData, 10000); // 每10秒同步一次
+        fetchData();
     </script>
 </body>
 </html>
