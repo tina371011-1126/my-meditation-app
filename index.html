@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 使用你提供的星空圖片作為背景 */
         body { 
             background: url('https://i.pinimg.com/474x/4e/dd/bc/4eddbc60fdb23239abfccb073e2c98f9.jpg');
             background-size: cover;
@@ -27,17 +26,19 @@
 
         .progress-fill { height: 100%; background: linear-gradient(90deg, #60a5fa, #c084fc); transition: width 1s ease-in-out; }
         
-        /* 輸入框樣式 */
         input, textarea { 
             background: rgba(255, 255, 255, 0.4) !important; 
-            color: #1e3a8a !important; /* 深藍色文字 */
+            color: #111827 !important; /* 加深輸入文字顏色 */
             border: 1px solid rgba(255, 255, 255, 0.5) !important;
             border-radius: 16px !important;
         }
         
-        input::placeholder, textarea::placeholder { color: #475569; }
+        /* 1. 修正：提示字改成深灰黑色 */
+        input::placeholder, textarea::placeholder { 
+            color: #374151 !important; 
+            opacity: 1;
+        }
 
-        /* 海軍藍榜單文字 */
         .navy-text { color: #000080; }
 
         .history-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; }
@@ -80,8 +81,8 @@
                 <input type="number" id="minutes" placeholder="例如：40" class="w-full p-4 outline-none">
             </div>
             <div class="space-y-1">
-                <label class="text-xs font-bold text-white ml-1">此刻的心得...</label>
-                <textarea id="note" placeholder="感受如何呢？" class="w-full p-4 outline-none h-24"></textarea>
+                <label class="text-xs font-bold text-white ml-1">此刻的心得... (必填)</label>
+                <textarea id="note" placeholder="寫下現在的感受吧！" class="w-full p-4 outline-none h-24"></textarea>
             </div>
             <button onclick="saveRecord()" class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">送出紀錄，能量進化</button>
         </div>
@@ -103,7 +104,6 @@
     </div>
 
     <script>
-        // --- 請確保填入你的 Supabase 資訊 ---
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -168,21 +168,30 @@
                 </div>
             `).join('');
 
-            document.getElementById('historyLogs').innerHTML = logs.map(l => `
-                <div class="history-item mt-4">
-                    <div class="flex justify-between items-center font-bold">
-                        <span>${l.username}</span><span>${l.coins} 幣</span>
+            // 2. 修正：修煉日誌加上日期與時間
+            document.getElementById('historyLogs').innerHTML = logs.map(l => {
+                const date = new Date(l.created_at);
+                const timeStr = `${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                return `
+                    <div class="history-item mt-4">
+                        <div class="flex justify-between items-center font-bold">
+                            <span>${l.username}</span><span>${l.coins} 幣</span>
+                        </div>
+                        <p class="text-[10px] opacity-60 mb-1 font-mono">${timeStr}</p>
+                        <p class="mt-1 bg-white/40 p-2 rounded-lg italic">"${l.note}"</p>
                     </div>
-                    <p class="mt-2 bg-white/40 p-2 rounded-lg italic">"${l.note || '靜修中...'}"</p>
-                </div>
-            `).join('') || '等待第一份日誌...';
+                `;
+            }).join('') || '等待第一份日誌...';
         }
 
         async function saveRecord() {
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
-            const note = document.getElementById('note').value;
+            const note = document.getElementById('note').value.trim();
+
+            // 3. 修正：心得欄位沒填不能送出
             if(!username || !minutes) return alert('請填寫完整資訊');
+            if(!note) return alert('請寫下此刻的心得再送出喔！靜心也是需要紀錄的～');
 
             const oldScore = cachedUserScores[username] || 0;
             const oldLevelCount = characters.filter(c => oldScore >= c.req).length;
