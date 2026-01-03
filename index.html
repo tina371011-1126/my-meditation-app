@@ -220,7 +220,7 @@
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = name ? `目前進度：${myScore} 能量 (目標: ${next.req})` : "下方輸入相同名字以同步累積森林能量";
+            document.getElementById('rankDisplay').innerText = name ? `目前進度：${myScore} 森林能量 (目標: ${next.req 森林能量}}` : "下方輸入相同名字以同步累積森林能量";
 
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
@@ -250,7 +250,7 @@
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
-            if(!username || isNaN(minutes) || !note) return alert('請完整填寫資訊或填寫格式不對');
+            if(!username || isNaN(minutes) || !note) return alert('請完整填寫資訊 或 填寫格式不對');
 
             const currentScore = cachedUserScores[username] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
