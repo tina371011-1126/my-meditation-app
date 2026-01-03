@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>禪定修煉場</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card { border-radius: 24px; transition: all 0.3s ease; }
+        .locked { filter: grayscale(1); opacity: 0.5; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-4">
+    <div class="max-w-md mx-auto space-y-6">
+        <div class="bg-white p-6 card shadow-sm border border-slate-100 flex justify-between items-center">
+            <div>
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">修煉點數</p>
+                <h1 id="totalPoints" class="text-4xl font-black text-indigo-600">0</h1>
+            </div>
+            <div class="text-3xl">🏆</div>
+        </div>
+
+        <div class="bg-white p-6 card shadow-sm border border-slate-100">
+            <h2 class="font-bold mb-4 text-slate-700">今日紀錄</h2>
+            <input type="number" id="minutes" placeholder="分鐘數" class="w-full mb-3 p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400">
+            <textarea id="note" placeholder="今日心得..." class="w-full mb-3 p-3 bg-slate-100 rounded-xl outline-none focus:ring-2 focus:ring-indigo-400"></textarea>
+            <button onclick="saveMeditation()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-200 active:scale-95 transition">送出並賺點數</button>
+        </div>
+
+        <div>
+            <h2 class="font-bold mb-4 text-slate-700">角色圖鑑</h2>
+            <div id="characterGrid" class="grid grid-cols-2 gap-4"></div>
+        </div>
+    </div>
+
+    <script>
+        let points = parseInt(localStorage.getItem('points')) || 0;
+        const characters = [
+            { name: '小沙彌', req: 0, icon: '🌱' },
+            { name: '行者', req: 100, icon: '🚶' },
+            { name: '禪師', req: 500, icon: '🧘' },
+            { name: '尊者', req: 1000, icon: '✨' }
+        ];
+
+        function updateUI() {
+            document.getElementById('totalPoints').innerText = points;
+            const grid = document.getElementById('characterGrid');
+            grid.innerHTML = characters.map(c => `
+                <div class="bg-white p-4 card border flex flex-col items-center ${points >= c.req ? 'border-indigo-200' : 'locked'}">
+                    <span class="text-4xl mb-2">${points >= c.req ? c.icon : '🔒'}</span>
+                    <span class="text-sm font-bold text-slate-600">${c.name}</span>
+                    <span class="text-xs text-slate-400">${c.req} pts</span>
+                </div>
+            `).join('');
+        }
+
+        function saveMeditation() {
+            const min = document.getElementById('minutes').value;
+            if(!min) return alert('請輸入分鐘數');
+            points += min * 10;
+            localStorage.setItem('points', points);
+            updateUI();
+            document.getElementById('minutes').value = '';
+            document.getElementById('note').value = '';
+            alert('功德圓滿！點數已入帳');
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>
