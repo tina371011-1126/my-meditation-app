@@ -3,74 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>寒假禪定打卡平台</title>
+    <title>寒假禪定打卡平台 - 星空版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #8da399; --accent: #d4a373; --bg: #fefae0; }
-        body { background-color: var(--bg); color: #434b42; font-family: sans-serif; }
-        .card { background: #ffffff; border-radius: 28px; border: 1px solid #e9edc9; box-shadow: 0 4px 15px rgba(141,163,153,0.1); }
-        .progress-fill { height: 100%; background: var(--accent); transition: width 0.8s ease-in-out; }
-        .locked { filter: grayscale(1) contrast(0.5); opacity: 0.3; }
-        .history-item { border-bottom: 1px solid #f0f2e8; }
+        :root { --primary: #8da399; --accent: #fcd34d; }
+        /* 溫和星空漸層背景 */
+        body { 
+            background: linear-gradient(135deg, #1a1c2c 0%, #4a192c 50%, #121212 100%);
+            background-attachment: fixed;
+            color: #e2e8f0; 
+            font-family: 'PingFang TC', sans-serif; 
+        }
+        .card { 
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(10px);
+            border-radius: 28px; 
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #8da399, #fcd34d); transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); }
+        input, textarea { background: rgba(0, 0, 0, 0.2) !important; color: white !important; border: 1px solid rgba(255, 255, 255, 0.2) !important; }
+        input::placeholder, textarea::placeholder { color: #94a3b8; }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-20">
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_73130c2c13.mp3" type="audio/mpeg">
+    </audio>
+
     <div class="max-w-md mx-auto space-y-6">
-        
         <header class="text-center py-6">
-            <h1 class="text-2xl font-black text-slate-700 tracking-[0.2em]">寒假禪定打卡平台</h1>
-            <p class="text-sm text-slate-500 mt-2 italic">「靜心一刻，靈魂便進化一分」</p>
+            <h1 class="text-2xl font-black tracking-[0.2em] text-transparent bg-clip-text bg-gradient-to-r from-teal-200 to-yellow-200">寒假禪定打卡平台</h1>
+            <p class="text-xs text-slate-400 mt-2 italic">♫ 點擊頁面任何地方開啟靜心音樂</p>
         </header>
 
         <div class="card p-6">
-            <div id="rankDisplay" class="text-sm font-bold mb-3 text-slate-600">請輸入名字查看修行進度...</div>
-            <div class="h-4 w-full bg-stone-100 rounded-full overflow-hidden shadow-inner">
+            <div id="rankDisplay" class="text-sm font-bold mb-3 text-teal-200 text-center">輸入名字同步修行進度...</div>
+            <div class="h-3 w-full bg-black/30 rounded-full overflow-hidden shadow-inner">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
-            <p class="text-[10px] text-stone-400 mt-2">提示：20分得10幣 / 30分得20幣 / 40分得40幣</p>
+            <div class="flex justify-between mt-2 text-[10px] text-slate-400">
+                <span>初心理性</span>
+                <span>宇宙覺醒</span>
+            </div>
         </div>
 
         <div class="card p-6 space-y-4">
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-stone-500 ml-1">你是誰～</label>
-                <input type="text" id="username" placeholder="每次填寫需相同喔" class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300">
-            </div>
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-stone-500 ml-1">禪定時間 (分鐘)</label>
-                <input type="number" id="minutes" placeholder="例如：40" class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300">
-            </div>
-            <div class="space-y-2">
-                <label class="text-xs font-bold text-stone-500 ml-1">今日修煉心得</label>
-                <textarea id="note" placeholder="寫下感受..." class="w-full p-3 bg-stone-50 rounded-2xl border-none ring-1 ring-stone-200 outline-none focus:ring-2 focus:ring-emerald-300 h-24"></textarea>
-            </div>
-            <button onclick="saveRecord()" class="w-full bg-[#8da399] text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition">送出紀錄，獲取禪定幣</button>
-        </div>
-
-        <div class="card p-6">
-            <h2 class="font-bold mb-4 text-emerald-800 flex justify-between items-center">
-                🏆 禪定幣排行榜 <span class="text-[10px] bg-emerald-100 px-2 py-1 rounded-full text-emerald-600">全體同步</span>
-            </h2>
-            <div id="leaderboard" class="space-y-2"></div>
+            <input type="text" id="username" placeholder="你是誰～(跨裝置同步用)" class="w-full p-4 rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 transition-all">
+            <input type="number" id="minutes" placeholder="今日禪定分鐘數" class="w-full p-4 rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 transition-all">
+            <textarea id="note" placeholder="此刻的心情是..." class="w-full p-4 rounded-2xl outline-none focus:ring-2 focus:ring-teal-500 transition-all h-20"></textarea>
+            <button onclick="saveRecord()" class="w-full bg-gradient-to-r from-teal-600 to-emerald-700 text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition">紀錄並進化</button>
         </div>
 
         <div class="space-y-4">
-            <h2 class="font-bold text-emerald-800 ml-2 text-lg">🌿 靈魂進化圖鑑</h2>
-            <div id="characterGrid" class="grid grid-cols-3 gap-3"></div>
+            <h2 class="font-bold text-teal-200 ml-2">🌌 已解鎖精靈</h2>
+            <div id="unlockedGrid" class="grid grid-cols-3 gap-3">
+                </div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 text-emerald-800">📖 修煉日誌</h2>
-            <div id="historyLogs" class="space-y-4 max-h-80 overflow-y-auto pr-2"></div>
+            <h2 class="font-bold mb-4 text-teal-200 border-b border-white/10 pb-2 text-sm">🏆 修行榜單</h2>
+            <div id="leaderboard" class="space-y-3 text-sm"></div>
         </div>
     </div>
 
     <script>
         // --- 請務必填入你的 Supabase 資訊 ---
-        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co'; // 替換這裡
-        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';           // 替換這裡
+        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        
+
         const characters = [
             { name: '懶石頭', req: 0, img: 'https://cdn-icons-png.flaticon.com/512/2602/2602465.png' },
             { name: '雲朵雞', req: 100, img: 'https://cdn-icons-png.flaticon.com/512/2663/2663067.png' },
@@ -84,88 +87,76 @@
             { name: '星系主', req: 900, img: 'https://cdn-icons-png.flaticon.com/512/2534/2534064.png' }
         ];
 
-        async function fetchData() {
-    // 這裡改用 client.from
-    const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
-    if(error) return;
+        // 啟動背景音樂 (因瀏覽器限制，需由使用者觸發點擊)
+        document.body.addEventListener('click', () => {
+            const music = document.getElementById('bgMusic');
+            if (music.paused) music.play();
+        }, { once: true });
 
-    const userScores = {};
-    logs.forEach(l => userScores[l.username] = (userScores[l.username] || 0) + l.coins);
-    
-    updateUI(logs, userScores);
-}
+        async function fetchData() {
+            const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
+            if(error) return;
+
+            const userScores = {};
+            logs.forEach(l => userScores[l.username] = (userScores[l.username] || 0) + l.coins);
+            
+            updateUI(logs, userScores);
+        }
 
         function updateUI(logs, userScores) {
-            // 排行榜
-            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
-            document.getElementById('leaderboard').innerHTML = sorted.map(([name, score], i) => `
-                <div class="flex justify-between p-3 bg-stone-50 rounded-xl text-sm border border-stone-100">
-                    <span class="font-medium">${i+1}. ${name}</span>
-                    <span class="font-bold text-emerald-700">${score} 幣</span>
-                </div>
-            `).join('') || '<p class="text-center text-stone-400 text-xs">目前還沒有人上榜...</p>';
-
-            // 進度條
             const name = document.getElementById('username').value.trim();
             const myScore = userScores[name] || 0;
-            const next = characters.find(c => c.req > myScore) || characters[9];
-            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
-            
-            document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerHTML = name ? 
-                (myScore >= 900 ? `⭐ 已達成最終境界！` : `距離進化到 <b>${next.name}</b> 還差 ${next.req - myScore} 幣`) 
-                : "輸入名字查看修行進度...";
 
-            // 角色圖鑑 (3欄)
-            document.getElementById('characterGrid').innerHTML = characters.map(c => `
-                <div class="card p-3 flex flex-col items-center border-2 transition-all ${myScore >= c.req ? 'border-emerald-200' : 'locked border-transparent'}">
-                    <img src="${c.img}" class="w-10 h-10 mb-2 object-contain">
-                    <span class="text-[10px] font-bold text-stone-600">${c.name}</span>
-                    <span class="text-[8px] text-stone-400">${c.req} 幣</span>
+            // 1. 排行榜
+            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 5).map(([n, s], i) => `
+                <div class="flex justify-between items-center opacity-90">
+                    <span>${i+1}. ${n}</span>
+                    <span class="text-xs font-mono text-teal-300">${s} 幣</span>
                 </div>
             `).join('');
 
-            // 修煉日誌
-            document.getElementById('historyLogs').innerHTML = logs.map(l => `
-                <div class="history-item pb-4">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="font-bold text-sm text-emerald-800">${l.username}</span>
-                        <span class="text-[10px] text-stone-400">${new Date(l.created_at).toLocaleString()}</span>
-                    </div>
-                    <div class="text-[11px] text-stone-500 mb-2 underline decoration-emerald-100 decoration-2">禪定 ${l.minutes} 分鐘 / 獲得 ${l.coins} 幣</div>
-                    <p class="text-xs text-stone-600 leading-relaxed bg-stone-50 p-2 rounded-lg italic">"${l.note || '無心得'}"</p>
+            // 2. 進度條
+            const next = characters.find(c => c.req > myScore) || characters[9];
+            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
+            document.getElementById('progressBarFill').style.width = prog + '%';
+            document.getElementById('rankDisplay').innerHTML = name ? 
+                (myScore >= 900 ? `✨ 已達到最高境界` : `距離進化到 <b>${next.name}</b> 還差 ${next.req - myScore} 幣`) : "同步修行中...";
+
+            // 3. 只呈現已解鎖的圖鑑 (重點修改)
+            const unlocked = characters.filter(c => myScore >= c.req);
+            document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
+                <div class="card p-3 flex flex-col items-center border-teal-500/30 animate-pulse">
+                    <img src="${c.img}" class="w-12 h-12 mb-2">
+                    <span class="text-[10px] font-bold text-teal-100 text-center">${c.name}</span>
                 </div>
-            `).join('') || '<p class="text-center text-stone-400 text-xs py-4">等待第一份修煉筆記...</p>';
+            `).join('');
         }
 
         async function saveRecord() {
-    const username = document.getElementById('username').value.trim();
-    const minutes = parseInt(document.getElementById('minutes').value);
-    const note = document.getElementById('note').value;
-    
-    if(!username || !minutes) return alert('名字跟分鐘數都要填喔！');
-    
-    let coins = 0;
-    if (minutes >= 40) coins = 40;
-    else if (minutes >= 30) coins = 20;
-    else if (minutes >= 20) coins = 10;
-    else return alert('禪定未滿 20 分鐘，還不能產生幣喔，再堅持一下！');
+            const username = document.getElementById('username').value.trim();
+            const minutes = parseInt(document.getElementById('minutes').value);
+            const note = document.getElementById('note').value;
+            if(!username || !minutes) return alert('別忘了填名字和時間喔');
 
-    // 重點在這裡：改用 client.from
-    const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
-    
-    if(error) {
-        alert('儲存失敗：' + error.message);
-    } else {
-        alert(`圓滿成功！獲得了 ${coins} 枚禪定幣！`);
-        document.getElementById('minutes').value = '';
-        document.getElementById('note').value = '';
-        fetchData(); 
-    }
-}
+            let coins = 0;
+            if (minutes >= 40) coins = 40;
+            else if (minutes >= 30) coins = 20;
+            else if (minutes >= 20) coins = 10;
+            else return alert('禪定未滿20分鐘，能量還不足以產生禪定幣...');
+
+            const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
+            if(error) alert('連線失敗');
+            else {
+                alert('紀錄成功，心靈能量已同步！');
+                document.getElementById('minutes').value = '';
+                document.getElementById('note').value = '';
+                fetchData();
+            }
+        }
 
         document.getElementById('username').addEventListener('input', fetchData);
-        setInterval(fetchData, 10000); // 每10秒同步一次
+        setInterval(fetchData, 10000);
         fetchData();
     </script>
 </body>
