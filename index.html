@@ -94,7 +94,7 @@
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">修行者大名</label>
+                    <label class="text-[11px] font-bold text-emerald-900 ml-1">我是誰～</label>
                     <input type="text" id="username" placeholder="輸入名字" class="w-full p-3 text-sm" oninput="startMusic(); fetchData();">
                 </div>
                 <div class="space-y-1">
@@ -103,7 +103,7 @@
                 </div>
             </div>
             <div class="space-y-1">
-                <label class="text-[11px] font-bold text-emerald-900 ml-1">今日修煉心得 (必填)</label>
+                <label class="text-[11px] font-bold text-emerald-900 ml-1">今日禪定心得 (必填)</label>
                 <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 outline-none"></textarea>
             </div>
             <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest">
@@ -120,12 +120,12 @@
 
         <div class="grid grid-cols-1 gap-6">
             <div class="card p-5">
-                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 修煉能量榜</h2>
+                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 禪定能量累積榜</h2>
                 <div id="leaderboard" class="space-y-2 text-xs"></div>
             </div>
 
             <div class="card p-5">
-                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 眾人修行誌</h2>
+                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 夥伴們的練習心得日誌</h2>
                 <div id="historyLogs" class="space-y-4 max-h-64 overflow-y-auto pr-2 text-xs"></div>
             </div>
         </div>
@@ -138,16 +138,16 @@
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const characters = [
-            { name: '懶石頭', req: 0, img: 'https://cdn-icons-png.flaticon.com/512/2602/2602465.png' },
-            { name: '雲朵雞', req: 100, img: 'https://cdn-icons-png.flaticon.com/512/2663/2663067.png' },
-            { name: '綠毛蟲', req: 200, img: 'https://cdn-icons-png.flaticon.com/512/805/805404.png' },
-            { name: '波波貓', req: 300, img: 'https://cdn-icons-png.flaticon.com/512/616/616430.png' },
-            { name: '狐狸仙', req: 400, img: 'https://cdn-icons-png.flaticon.com/512/235/235880.png' },
-            { name: '鹿角獸', req: 500, img: 'https://cdn-icons-png.flaticon.com/512/2219/2219774.png' },
-            { name: '獨角鯨', req: 600, img: 'https://cdn-icons-png.flaticon.com/512/2040/2040510.png' },
-            { name: '大白龍', req: 700, img: 'https://cdn-icons-png.flaticon.com/512/616/616606.png' },
-            { name: '火鳳凰', req: 800, img: 'https://cdn-icons-png.flaticon.com/512/2026/2026462.png' },
-            { name: '星系主', req: 900, img: 'https://cdn-icons-png.flaticon.com/512/2534/2534064.png' }
+            { name: '懶石頭', req: 0, img: 'https://drive.google.com/file/d/10zqr1InVAegr3lsvTbY1Eot0sC6-YrtV/view?usp=drive_link' },
+            { name: '雲朵雞', req: 100, img: 'https://drive.google.com/file/d/1h-qjQaB1_LcjK-WDq3AeaRyJ9qjH4AL3/view?usp=sharing' },
+            { name: '綠毛蟲', req: 200, img: 'https://drive.google.com/file/d/1MvcCMON_GIm2fEIkrlN1ki_KQHc5VHJr/view?usp=drive_link' },
+            { name: '波波貓', req: 300, img: 'https://drive.google.com/file/d/1GWJ7ZhlTSJlJZsIcg9FNT-NcMeDPJtFA/view?usp=drive_link' },
+            { name: '狐狸仙', req: 400, img: 'https://drive.google.com/file/d/1N31ywGh2kVwSXNmmn9kzrq3qa6JX9oKc/view?usp=drive_link' },
+            { name: '鹿角獸', req: 500, img: 'https://drive.google.com/file/d/1P3a6gemImOD1fWCb7qFFEQOoAAclu1Dk/view?usp=drive_link' },
+            { name: '獨角鯨', req: 600, img: 'https://drive.google.com/file/d/1Lee3RdUaDSy0E0EJ4SzafllRcpvbqAIg/view?usp=drive_link' },
+            { name: '大白龍', req: 700, img: 'https://drive.google.com/file/d/1UrBsUnHcqKc38PUe2kyx3poxEJocsrGg/view?usp=sharing' },
+            { name: '火鳳凰', req: 800, img: 'https://drive.google.com/file/d/1kDzrFyed4qnukibSGsZp8wP39cXWcNzt/view?usp=sharing' },
+            { name: '星系主', req: 900, img: 'https://drive.google.com/file/d/1a-nSLtjhJtryKTQYisJCtw8iVgNMkLyn/view?usp=drive_link' }
         ];
 
         let cachedUserScores = {};
@@ -212,7 +212,7 @@
             if (minutes >= 40) coins = 40;
             else if (minutes >= 30) coins = 20;
             else if (minutes >= 20) coins = 10;
-            else return alert('最少需修行 20 分鐘喔！');
+            else return alert('最少需禪定 20 分鐘喔！');
 
             const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
             if(error) alert('系統忙碌中');
