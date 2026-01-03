@@ -18,23 +18,27 @@
         }
         
         .card { 
-            background: rgba(255, 255, 255, 0.15); 
+            background: rgba(255, 255, 255, 0.25); 
             backdrop-filter: blur(15px);
             border-radius: 28px; 
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
         .progress-fill { height: 100%; background: linear-gradient(90deg, #60a5fa, #c084fc); transition: width 1s ease-in-out; }
         
+        /* 輸入框樣式 */
         input, textarea { 
-            background: rgba(255, 255, 255, 0.1) !important; 
-            color: white !important; 
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            background: rgba(255, 255, 255, 0.4) !important; 
+            color: #1e3a8a !important; /* 深藍色文字 */
+            border: 1px solid rgba(255, 255, 255, 0.5) !important;
             border-radius: 16px !important;
         }
         
-        input::placeholder, textarea::placeholder { color: #cbd5e1; }
+        input::placeholder, textarea::placeholder { color: #475569; }
+
+        /* 海軍藍榜單文字 */
+        .navy-text { color: #000080; }
 
         .history-item { border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 1rem; }
         
@@ -57,20 +61,29 @@
         </header>
 
         <div class="card p-6 text-center">
-            <div id="rankDisplay" class="text-sm font-bold mb-3 text-sky-100 italic">連線雲端中...</div>
+            <div id="rankDisplay" class="text-sm font-bold mb-3 text-white italic">連線雲端中...</div>
             <div class="h-3 w-full bg-black/20 rounded-full overflow-hidden border border-white/30">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
-            <div class="flex justify-between mt-2 text-[10px] text-sky-300 font-bold">
+            <div class="flex justify-between mt-2 text-[10px] text-white font-bold">
                 <span>初心</span><span>彼岸</span>
             </div>
         </div>
 
         <div class="card p-6 space-y-4">
-            <input type="text" id="username" placeholder="你是誰～" class="w-full p-4 outline-none" oninput="startMusic(); fetchData();">
-            <input type="number" id="minutes" placeholder="禪定幾分鐘？" class="w-full p-4 outline-none">
-            <textarea id="note" placeholder="寫下修煉心得..." class="w-full p-4 outline-none h-24"></textarea>
-            <button onclick="saveRecord()" class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">送出紀錄，能量進化</button>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-white ml-1">你是誰～</label>
+                <input type="text" id="username" placeholder="輸入名字同步進度" class="w-full p-4 outline-none" oninput="startMusic(); fetchData();">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-white ml-1">禪定幾分鐘？</label>
+                <input type="number" id="minutes" placeholder="例如：40" class="w-full p-4 outline-none">
+            </div>
+            <div class="space-y-1">
+                <label class="text-xs font-bold text-white ml-1">此刻的心得...</label>
+                <textarea id="note" placeholder="感受如何呢？" class="w-full p-4 outline-none h-24"></textarea>
+            </div>
+            <button onclick="saveRecord()" class="w-full bg-gradient-to-r from-blue-600 to-purple-700 text-white py-4 rounded-2xl font-bold shadow-lg active:scale-95 transition-all">送出紀錄，能量進化</button>
         </div>
 
         <div class="space-y-4">
@@ -79,13 +92,13 @@
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 text-sky-100 border-b border-white/20 pb-2">🏆 修行榜單</h2>
-            <div id="leaderboard" class="space-y-3 text-sm"></div>
+            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">🏆 修行榜單</h2>
+            <div id="leaderboard" class="space-y-3 text-sm navy-text"></div>
         </div>
 
         <div class="card p-6">
-            <h2 class="font-bold mb-4 text-sky-100 border-b border-white/20 pb-2">📖 修煉日誌</h2>
-            <div id="historyLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 text-sm"></div>
+            <h2 class="font-bold mb-4 navy-text border-b border-navy-800/20 pb-2">📖 修煉日誌</h2>
+            <div id="historyLogs" class="space-y-4 max-h-96 overflow-y-auto pr-2 text-sm navy-text"></div>
         </div>
     </div>
 
@@ -120,7 +133,7 @@
 
         async function fetchData() {
             const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
-            if(error) { console.error("同步失敗:", error); return; }
+            if(error) return;
 
             cachedUserScores = {};
             logs.forEach(l => {
@@ -133,40 +146,36 @@
             const name = document.getElementById('username').value.trim();
             const myScore = userScores[name] || 0;
 
-            // 1. 排行榜
             const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
-                <div class="flex justify-between p-2 bg-white/10 rounded-lg mb-1">
-                    <span class="${n === name ? 'text-blue-300 font-bold' : ''}">${i+1}. ${n}</span>
-                    <span>${s} 幣</span>
+                <div class="flex justify-between p-2 bg-white/30 rounded-lg mb-1">
+                    <span class="${n === name ? 'font-black underline' : ''}">${i+1}. ${n}</span>
+                    <span class="font-bold">${s} 幣</span>
                 </div>
-            `).join('');
+            `).join('') || '尚未有修行紀錄';
 
-            // 2. 進度條
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
             document.getElementById('rankDisplay').innerHTML = name ? 
                 (myScore >= 900 ? `✨ 已覺醒：星系主` : `距離進化還差 ${next.req - myScore} 幣`) : "同步修行中...";
 
-            // 3. 圖鑑 (只呈現象解鎖的)
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
-                <div class="card p-3 flex flex-col items-center unlocked-pet">
+                <div class="card p-3 flex flex-col items-center bg-white/40 border-white/60 unlocked-pet">
                     <img src="${c.img}" class="w-10 h-10 mb-2">
-                    <span class="text-[10px] font-bold text-white">${c.name}</span>
+                    <span class="text-[10px] font-bold navy-text">${c.name}</span>
                 </div>
             `).join('');
 
-            // 4. 日誌
             document.getElementById('historyLogs').innerHTML = logs.map(l => `
                 <div class="history-item mt-4">
-                    <div class="flex justify-between items-center text-blue-200 font-bold">
+                    <div class="flex justify-between items-center font-bold">
                         <span>${l.username}</span><span>${l.coins} 幣</span>
                     </div>
-                    <p class="mt-2 bg-black/20 p-2 rounded-lg italic">"${l.note || '靜修中...'}"</p>
+                    <p class="mt-2 bg-white/40 p-2 rounded-lg italic">"${l.note || '靜修中...'}"</p>
                 </div>
-            `).join('');
+            `).join('') || '等待第一份日誌...';
         }
 
         async function saveRecord() {
