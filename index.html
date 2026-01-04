@@ -265,7 +265,24 @@
                 fetchData();
             }
         }
+        <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest mb-2">
+    送出禪定紀錄 ‧ 注入森林能量
+</button>
 
+<div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-4 text-[11px] leading-relaxed shadow-sm">
+    <h3 class="font-bold text-emerald-900 mb-2 flex items-center justify-center">
+        <span class="mr-1">🌲</span> 提升森林能量說明 <span class="ml-1">🌲</span>
+    </h3>
+    <ul class="space-y-1.5 text-emerald-800 text-center list-none">
+        <li>1. 每天禪定 <span class="font-bold">10</span> 分鐘得 <span class="font-bold italic">5</span> 點森林能量</li>
+        <li>2. 每天禪定 <span class="font-bold">20</span> 分鐘得 <span class="font-bold italic">10</span> 點森林能量</li>
+        <li>3. 每天禪定 <span class="font-bold">30</span> 分鐘得 <span class="font-bold italic">20</span> 點森林能量</li>
+        <li>4. 每天禪定 <span class="font-bold">40</span> 分鐘(含)以上得 <span class="font-bold italic">40</span> 點森林能量</li>
+    </ul>
+    <p class="mt-3 pt-2 border-t border-emerald-100 text-emerald-600 font-medium text-center">
+        ** 解鎖角色以 100 點能量為單位，最高獲得 900 點能量以上可以解鎖神秘角色 🧞
+    </p>
+</div>
         function showSuccessModal(coins) {
             document.getElementById('successCoins').innerText = coins;
             document.getElementById('successModal').classList.remove('hidden');
