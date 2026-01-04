@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - 一起來森林累積能量吧！</title>
+    <title>台科領寒假禪定打卡平台 - 一起來累積森林能量吧！</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -235,7 +235,7 @@
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 能量)` : "輸入名字以同步累積森林能量";
+            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 森林能量)` : "下方輸入名字以同步累積森林能量";
 
             // 更新已覺醒精靈
             const unlocked = characters.filter(c => myScore >= c.req);
