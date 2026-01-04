@@ -38,7 +38,17 @@
             box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-
+        /* 提醒按鈕樣式 */
+        .remind-btn {
+            background: #06C755; /* Line 綠 */
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .remind-btn:hover { background: #05a346; transform: scale(1.05); }
         @keyframes modalShow {
             from { opacity: 0; transform: scale(0.8) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
