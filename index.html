@@ -224,7 +224,7 @@
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 8).map(([n, s], i) => `
                 <div class="flex justify-between items-center p-2 ${n === name ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
                     <span class="font-bold">${i+1}. ${n}</span>
-                    <span class="text-emerald-600 font-mono">${s} pts</span>
+                    <span class="text-emerald-600 font-mono">${s} 點森林能量</span>
                 </div>
             `).join('') || '尚無紀錄';
 
@@ -254,7 +254,7 @@
                 <div class="history-item border-b border-emerald-100/50 pb-4">
                     <div class="flex justify-between items-center font-bold text-emerald-900 mb-1">
                         <span class="text-sm">${l.username}</span>
-                        <span class="text-emerald-600">+${l.coins} pts</span>
+                        <span class="text-emerald-600">+${l.coins} 點森林能量</span>
                     </div>
                     <div class="text-[10px] text-emerald-700/60 mb-2 font-mono">${timeStr}</div>
                     <div class="p-3 bg-white/60 rounded-lg italic text-emerald-800 leading-relaxed shadow-sm">"${l.note}"</div>
