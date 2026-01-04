@@ -222,7 +222,7 @@
             document.getElementById('progressBarFill').style.width = prog + '%';
             
             // 整合：修正原本 JS 中的字串拼接語法錯誤
-            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 森林能量)` : "輸入名字以同步累積森林能量";
+            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 森林能量)` : "輸入相同名字以同步累積森林能量";
 
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
