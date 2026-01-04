@@ -109,7 +109,14 @@
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
         </div>
-
+        <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
+                <span>🌱 種子</span><span>🌲 守護森林</span>
+            </div>
+        </div>
+    
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
@@ -121,7 +128,10 @@
                     <input type="number" id="minutes" placeholder="數字" class="w-full p-3 text-sm rounded-xl border border-emerald-100 outline-none">
                 </div>
             </div>
-            <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 rounded-xl border border-emerald-100 outline-none"></textarea>
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-emerald-900 ml-1">今日禪定心得 (必填)</label>
+                <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 rounded-xl border border-emerald-100 outline-none"></textarea>
+            </div>
             <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest">
                 送出禪定紀錄 ‧ 注入森林能量
             </button>
