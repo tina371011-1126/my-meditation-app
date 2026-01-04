@@ -1,306 +1,292 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - 森林高畫質版</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body { 
-            background: url('https://lh3.googleusercontent.com/d/1YQAYwbwwn-GJJE0S41aIHWiDlIXJilWc');
-            background-size: cover;
-            background-position: center top;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            image-rendering: -webkit-optimize-contrast;
-            color: #064e3b;
-            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台科領寒假禪定打卡平台 - 森林高畫質版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { 
+            /* 修正：將 Drive 連結轉為直接外連網址 (uc?id=...) */
+            background: url('https://lh3.googleusercontent.com/d/1YQAYwbwwn-GJJE0S41aIHWiDlIXJilWc=w1600');
+            background-size: cover;
+            background-position: center top;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            image-rendering: -webkit-optimize-contrast;
+            color: #064e3b;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
+        }
 
-        .title-gradient {
-            color: #166534;
-            filter: drop-shadow(0 2px 4px rgba(255,255,255,0.8)) drop-shadow(0 0 10px rgba(255,255,255,0.5));
-            letter-spacing: 0.1em;
-        }
+        .title-gradient {
+            color: #166534;
+            filter: drop-shadow(0 2px 4px rgba(255,255,255,0.8)) drop-shadow(0 0 10px rgba(255,255,255,0.5));
+            letter-spacing: 0.1em;
+        }
 
-        .card { 
-            background: rgba(255, 255, 255, 0.85); 
-            backdrop-filter: blur(12px);
-            border-radius: 24px; 
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-        }
+        .card { 
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px);
+            border-radius: 24px; 
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
 
-        .progress-fill { 
-            height: 100%; 
-            background: linear-gradient(90deg, #34d399, #059669); 
-            box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, #34d399, #059669); 
+            box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
 
-        /* 彈窗動畫 */
-        @keyframes modalShow {
-            from { opacity: 0; transform: scale(0.8) translateY(20px); }
-            to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .modal-content { animation: modalShow 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
+        /* 彈窗動畫 */
+        @keyframes modalShow {
+            from { opacity: 0; transform: scale(0.8) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-content { animation: modalShow 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .animate-rotate { animation: rotate 10s linear infinite; }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-rotate { animation: rotate 10s linear infinite; }
 
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .unlocked-pet { animation: float 3s infinite ease-in-out; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .unlocked-pet { animation: float 3s infinite ease-in-out; }
 
-        #historyLogs::-webkit-scrollbar { width: 5px; }
-        #historyLogs::-webkit-scrollbar-thumb { background: #6ee7b7; border-radius: 10px; }
-    </style>
+        #historyLogs::-webkit-scrollbar { width: 5px; }
+        #historyLogs::-webkit-scrollbar-thumb { background: #6ee7b7; border-radius: 10px; }
+    </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
 
-    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95 overflow-hidden">
-            <div class="absolute inset-0 opacity-10 animate-rotate pointer-events-none">
-                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-transparent"></div>
-            </div>
-            <div class="relative z-10">
-                <div class="text-5xl mb-4">✨</div>
-                <h2 class="text-2xl font-black text-emerald-800 mb-2">能量注入成功！</h2>
-                <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點森林能量</p>
-                <button onclick="closeSuccessModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">確認</button>
-            </div>
-        </div>
-    </div>
+    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95 overflow-hidden">
+            <div class="absolute inset-0 opacity-10 animate-rotate pointer-events-none">
+                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-transparent"></div>
+            </div>
+            <div class="relative z-10">
+                <div class="text-5xl mb-4">✨</div>
+                <h2 class="text-2xl font-black text-emerald-800 mb-2">能量注入成功！</h2>
+                <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點森林能量</p>
+                <button onclick="closeSuccessModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">確認</button>
+            </div>
+        </div>
+    </div>
 
-    <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
-        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95">
-            <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-yellow-300 rounded-full blur-2xl opacity-50"></div>
-            <h2 class="text-2xl font-black text-emerald-800 mb-2">🎊 恭喜進化！</h2>
-            <p class="text-sm text-emerald-600 mb-6">你的能量感應到了新夥伴</p>
-            <div class="bg-emerald-50 rounded-3xl p-6 mb-6 shadow-inner border border-emerald-100">
-                <img id="modalImg" src="" class="w-24 h-24 mx-auto drop-shadow-2xl mb-3">
-                <div id="modalName" class="text-xl font-bold text-emerald-900"></div>
-            </div>
-            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">太棒了！</button>
-        </div>
-    </div>
+    <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
+        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95">
+            <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-yellow-300 rounded-full blur-2xl opacity-50"></div>
+            <h2 class="text-2xl font-black text-emerald-800 mb-2">🎊 恭喜進化！</h2>
+            <p class="text-sm text-emerald-600 mb-6">你的能量感應到了新夥伴</p>
+            <div class="bg-emerald-50 rounded-3xl p-6 mb-6 shadow-inner border border-emerald-100">
+                <img id="modalImg" src="" class="w-24 h-24 mx-auto drop-shadow-2xl mb-3">
+                <div id="modalName" class="text-xl font-bold text-emerald-900"></div>
+            </div>
+            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">太棒了！</button>
+        </div>
+    </div>
 
-    <audio id="bgMusic" loop preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_73130c2c13.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_73130c2c13.mp3" type="audio/mpeg">
+    </audio>
 
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="text-center py-6">
-            <h1 class="text-3xl font-black title-gradient">台科領寒假禪定打卡</h1>
-            <div class="mt-2">
-                <span class="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold shadow-sm">森林修煉模式啟動中</span>
-            </div>
-        </header>
+    <div class="max-w-md mx-auto space-y-6">
+        <header class="text-center py-6">
+            <h1 class="text-3xl font-black title-gradient">台科領寒假禪定打卡</h1>
+            <div class="mt-2">
+                <span class="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold shadow-sm">森林修煉模式啟動中</span>
+            </div>
+        </header>
 
-        <div class="card p-5 text-center">
-            <div id="rankDisplay" class="text-xs font-bold mb-3 text-emerald-800 tracking-wide">正在感應森林能量...</div>
-            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
-                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
-            </div>
-            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
-                <span>🌱 種子</span><span>🌲 守護森林</span>
-            </div>
-        </div>
+        <div class="card p-5 text-center">
+            <div id="rankDisplay" class="text-xs font-bold mb-3 text-emerald-800 tracking-wide">正在感應森林能量...</div>
+            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
+                <span>🌱 種子</span><span>🌲 守護森林</span>
+            </div>
+        </div>
 
-        <div class="card p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">我是誰～</label>
-                    <input type="text" id="username" placeholder="輸入名字" class="w-full p-3 text-sm outline-none" oninput="startMusic(); fetchData();">
-                </div>
-                <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">禪定時間(分鐘)</label>
-                    <input type="number" id="minutes" placeholder="分鐘(請填數字)" class="w-full p-3 text-sm outline-none">
-                </div>
-            </div>
-            <div class="space-y-1">
-                <label class="text-[11px] font-bold text-emerald-900 ml-1">今日禪定心得 (必填)</label>
-                <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 outline-none"></textarea>
-            </div>
-            <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest mb-2">
-                送出禪定紀錄 ‧ 注入森林能量
-            </button>
+        <div class="card p-6 space-y-4">
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-emerald-900 ml-1">我是誰～</label>
+                    <input type="text" id="username" placeholder="輸入名字" class="w-full p-3 text-sm outline-none" oninput="startMusic(); fetchData();">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-bold text-emerald-900 ml-1">禪定時間(分鐘)</label>
+                    <input type="number" id="minutes" placeholder="分鐘" class="w-full p-3 text-sm outline-none">
+                </div>
+            </div>
+            <div class="space-y-1">
+                <label class="text-[11px] font-bold text-emerald-900 ml-1">今日禪定心得 (必填)</label>
+                <textarea id="note" placeholder="記錄當下的平靜..." class="w-full p-3 text-sm h-20 outline-none"></textarea>
+            </div>
+            <button onclick="saveRecord()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-xl font-bold shadow-md transform active:scale-95 transition-all text-sm tracking-widest mb-2">
+                送出禪定紀錄 ‧ 注入森林能量
+            </button>
+        </div>
 
-            <div class="bg-emerald-50/80 border border-emerald-100 rounded-xl p-4 text-[11px] leading-relaxed">
-                <h3 class="font-bold text-emerald-900 mb-2 flex items-center">
-                    <span class="mr-1">🌲</span> 提升森林能量說明 <span>🌲</span>
-                </h3>
-                <ul class="space-y-1 text-emerald-800">
-                    <li>1. 每天禪定 <span class="font-bold">10</span> 分鐘得 <span class="font-bold italic">5</span> 點森林能量</li>
-                    <li>2. 每天禪定 <span class="font-bold">20</span> 分鐘得 <span class="font-bold italic">10</span> 點森林能量</li>
-                    <li>3. 每天禪定 <span class="font-bold">30</span> 分鐘得 <span class="font-bold italic">20</span> 點森林能量</li>
-                    <li>4. 每天禪定 <span class="font-bold">40</span> 分鐘(含)以上得 <span class="font-bold italic">40</span> 點森林能量</li>
-                </ul>
-                <p class="mt-2 text-emerald-600 font-medium">
-                    ** 解鎖角色以 100 點能量為單位，最高獲得 900 點能量以上可以解鎖神秘角色 🧞
-                </p>
-            </div>
-        </div>
+        <div class="space-y-4">
+            <h2 class="font-bold text-emerald-900 text-base ml-2 flex items-center gap-2">
+                <span class="w-3 h-3 bg-emerald-500 rounded-full"></span> 已覺醒精靈
+            </h2>
+            <div id="unlockedGrid" class="grid grid-cols-3 gap-4 px-2"></div>
+        </div>
 
-        <div class="space-y-4">
-            <h2 class="font-bold text-emerald-900 text-base ml-2 flex items-center gap-2">
-                <span class="w-3 h-3 bg-emerald-500 rounded-full"></span> 已覺醒精靈
-            </h2>
-            <div id="unlockedGrid" class="grid grid-cols-3 gap-4 px-2"></div>
-        </div>
+        <div class="grid grid-cols-1 gap-6">
+            <div class="card p-5">
+                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 森林能量累積榜</h2>
+                <div id="leaderboard" class="space-y-2 text-xs"></div>
+            </div>
+            <div class="card p-5">
+                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 夥伴們的練習心得日誌</h2>
+                <div id="historyLogs" class="space-y-6 max-h-80 overflow-y-auto pr-2 text-xs"></div>
+            </div>
+        </div>
+    </div>
 
-        <div class="grid grid-cols-1 gap-6">
-            <div class="card p-5">
-                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 森林能量累積榜</h2>
-                <div id="leaderboard" class="space-y-2 text-xs"></div>
-            </div>
+    <script>
+        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            <div class="card p-5">
-                <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 夥伴們的練習心得日誌</h2>
-                <div id="historyLogs" class="space-y-6 max-h-80 overflow-y-auto pr-2 text-xs"></div>
-            </div>
-        </div>
-    </div>
+        const characters = [
+            { name: '懶石頭', req: 0, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
+            { name: '雲朵雞', req: 100, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
+            { name: '綠毛蟲', req: 200, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
+            { name: '波波貓', req: 300, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
+            { name: '狐狸仙', req: 400, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { name: '鹿角獸', req: 500, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { name: '獨角鯨', req: 600, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { name: '大白龍', req: 700, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { name: '火鳳凰', req: 800, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { name: '星系主', req: 900, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
+        ];
 
-    <script>
-        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let cachedUserScores = {};
+        let musicStarted = false;
 
-        const characters = [
-            { name: '懶石頭', req: 0, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
-            { name: '雲朵雞', req: 100, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
-            { name: '綠毛蟲', req: 200, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
-            { name: '波波貓', req: 300, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
-            { name: '狐狸仙', req: 400, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
-            { name: '鹿角獸', req: 500, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
-            { name: '獨角鯨', req: 600, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
-            { name: '大白龍', req: 700, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
-            { name: '火鳳凰', req: 800, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
-            { name: '星系主', req: 900, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
-        ];
+        function startMusic() {
+            if (!musicStarted) {
+                document.getElementById('bgMusic').play().then(() => { musicStarted = true; }).catch(() => {});
+            }
+        }
 
-        let cachedUserScores = {};
-        let musicStarted = false;
+        async function fetchData() {
+            const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
+            if(error) return;
+            cachedUserScores = {};
+            logs.forEach(l => { cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins; });
+            updateUI(logs, cachedUserScores);
+        }
 
-        function startMusic() {
-            if (!musicStarted) {
-                document.getElementById('bgMusic').play().then(() => { musicStarted = true; }).catch(() => {});
-            }
-        }
+        function updateUI(logs, userScores) {
+            const name = document.getElementById('username').value.trim();
+            const myScore = userScores[name] || 0;
 
-        async function fetchData() {
-            const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
-            if(error) return;
-            cachedUserScores = {};
-            logs.forEach(l => { cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins; });
-            updateUI(logs, cachedUserScores);
-        }
+            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 8).map(([n, s], i) => `
+                <div class="flex justify-between items-center p-2 ${n === name ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
+                    <span class="font-bold">${i+1}. ${n}</span>
+                    <span class="text-emerald-600 font-mono">${s} pts</span>
+                </div>
+            `).join('') || '尚無紀錄';
 
-        function updateUI(logs, userScores) {
-            const name = document.getElementById('username').value.trim();
-            const myScore = userScores[name] || 0;
+            const next = characters.find(c => c.req > myScore) || characters[9];
+            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
+            document.getElementById('progressBarFill').style.width = prog + '%';
+            
+            // 修正：修正了原本代碼中多出的引號與括號錯誤
+            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 森林能量)` : "下方輸入相同名字以同步累積森林能量";
 
-            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
-            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 8).map(([n, s], i) => `
-                <div class="flex justify-between items-center p-2 ${n === name ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
-                    <span class="font-bold">${i+1}. ${n}</span>
-                    <span class="text-emerald-600 font-mono">${s} pts</span>
-                </div>
-            `).join('') || '尚無紀錄';
+            const unlocked = characters.filter(c => myScore >= c.req);
+            document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
+                <div class="flex flex-col items-center p-4 bg-white/90 rounded-2xl shadow-md unlocked-pet border border-emerald-100">
+                    <img src="${c.img}" class="w-12 h-12 object-contain">
+                    <span class="text-[10px] mt-2 font-bold text-emerald-800">${c.name}</span>
+                </div>
+            `).join('');
 
-            const next = characters.find(c => c.req > myScore) || characters[9];
-            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
-            document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req 森林能量}}` : "下方輸入相同名字以同步累積森林能量";
+            document.getElementById('historyLogs').innerHTML = logs.map(l => {
+                const date = new Date(l.created_at);
+                const timeStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
+                return `
+                <div class="history-item border-b border-emerald-100/50 pb-4">
+                    <div class="flex justify-between items-center font-bold text-emerald-900 mb-1">
+                        <span class="text-sm">${l.username}</span>
+                        <span class="text-emerald-600">+${l.coins} pts</span>
+                    </div>
+                    <div class="text-[10px] text-emerald-700/60 mb-2 font-mono">${timeStr}</div>
+                    <div class="p-3 bg-white/60 rounded-lg italic text-emerald-800 leading-relaxed shadow-sm">"${l.note}"</div>
+                </div>
+                `;
+            }).join('');
+        }
 
-            const unlocked = characters.filter(c => myScore >= c.req);
-            document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
-                <div class="flex flex-col items-center p-4 bg-white/90 rounded-2xl shadow-md unlocked-pet border border-emerald-100">
-                    <img src="${c.img}" class="w-12 h-12 object-contain">
-                    <span class="text-[10px] mt-2 font-bold text-emerald-800">${c.name}</span>
-                </div>
-            `).join('');
+        async function saveRecord() {
+            const username = document.getElementById('username').value.trim();
+            const minutes = parseInt(document.getElementById('minutes').value);
+            const note = document.getElementById('note').value.trim();
+            if(!username || isNaN(minutes) || !note) return alert('請完整填寫資訊 或 填寫格式不對');
 
-            document.getElementById('historyLogs').innerHTML = logs.map(l => {
-                const date = new Date(l.created_at);
-                const timeStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
-                return `
-                <div class="history-item border-b border-emerald-100/50 pb-4">
-                    <div class="flex justify-between items-center font-bold text-emerald-900 mb-1">
-                        <span class="text-sm">${l.username}</span>
-                        <span class="text-emerald-600">+${l.coins} pts</span>
-                    </div>
-                    <div class="text-[10px] text-emerald-700/60 mb-2 font-mono">${timeStr}</div>
-                    <div class="p-3 bg-white/60 rounded-lg italic text-emerald-800 leading-relaxed shadow-sm">"${l.note}"</div>
-                </div>
-                `;
-            }).join('');
-        }
+            const currentScore = cachedUserScores[username] || 0;
+            const beforeLevel = characters.filter(c => currentScore >= c.req).length;
 
-        async function saveRecord() {
-            const username = document.getElementById('username').value.trim();
-            const minutes = parseInt(document.getElementById('minutes').value);
-            const note = document.getElementById('note').value.trim();
-            if(!username || isNaN(minutes) || !note) return alert('請完整填寫資訊 或 填寫格式不對');
+            let coins = 0;
+            if (minutes >= 40) coins = 40;
+            else if (minutes >= 30) coins = 20;
+            else if (minutes >= 20) coins = 10;
+            else if (minutes >= 10) coins = 5;
+            else return alert('最少需禪定 10 分鐘喔！');
 
-            const currentScore = cachedUserScores[username] || 0;
-            const beforeLevel = characters.filter(c => currentScore >= c.req).length;
+            const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
+            
+            if(error) {
+                alert('系統忙碌中');
+            } else {
+                const afterLevel = characters.filter(c => (currentScore + coins) >= c.req).length;
+                if (afterLevel > beforeLevel) {
+                    showEvoModal(characters[afterLevel - 1]);
+                } else {
+                    showSuccessModal(coins);
+                }
+                document.getElementById('minutes').value = '';
+                document.getElementById('note').value = '';
+                fetchData();
+            }
+        }
 
-            let coins = 0;
-            if (minutes >= 40) coins = 40;
-            else if (minutes >= 30) coins = 20;
-            else if (minutes >= 20) coins = 10;
-            else if (minutes >= 10) coins = 5;
-            else return alert('最少需禪定 10 分鐘喔！');
+        function showSuccessModal(coins) {
+            document.getElementById('successCoins').innerText = coins;
+            document.getElementById('successModal').classList.remove('hidden');
+        }
 
-            const { error } = await client.from('meditation_logs').insert([{ username, minutes, note, coins }]);
-            
-            if(error) {
-                alert('系統忙碌中');
-            } else {
-                const afterLevel = characters.filter(c => (currentScore + coins) >= c.req).length;
-                if (afterLevel > beforeLevel) {
-                    showEvoModal(characters[afterLevel - 1]);
-                } else {
-                    // 第二點：使用華麗浮層顯示注入成功
-                    showSuccessModal(coins);
-                }
-                document.getElementById('minutes').value = '';
-                document.getElementById('note').value = '';
-                fetchData();
-            }
-        }
+        function closeSuccessModal() {
+            document.getElementById('successModal').classList.add('hidden');
+        }
 
-        function showSuccessModal(coins) {
-            document.getElementById('successCoins').innerText = coins;
-            document.getElementById('successModal').classList.remove('hidden');
-        }
+        function showEvoModal(spirit) {
+            document.getElementById('modalImg').src = spirit.img;
+            document.getElementById('modalName').innerText = spirit.name;
+            document.getElementById('evoModal').classList.remove('hidden');
+        }
 
-        function closeSuccessModal() {
-            document.getElementById('successModal').classList.add('hidden');
-        }
+        function closeModal() {
+            document.getElementById('evoModal').classList.add('hidden');
+        }
 
-        function showEvoModal(spirit) {
-            document.getElementById('modalImg').src = spirit.img;
-            document.getElementById('modalName').innerText = spirit.name;
-            document.getElementById('evoModal').classList.remove('hidden');
-        }
-
-        function closeModal() {
-            document.getElementById('evoModal').classList.add('hidden');
-        }
-
-        setInterval(fetchData, 15000);
-        fetchData();
-    </script>
+        setInterval(fetchData, 15000);
+        fetchData();
+    </script>
 </body>
 </html>
