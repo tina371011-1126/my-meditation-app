@@ -8,7 +8,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
-            /* 整合：修正過的 Google Drive 直接外連背景 */
             background: url('https://lh3.googleusercontent.com/u/0/d/1YQAYwbwwn-GJJE0S41aIHWiDlIXJilWc=w1920-h1080');
             background-size: cover;
             background-position: center top;
@@ -106,7 +105,12 @@
         </header>
 
         <div class="card p-5 text-center">
-            <div id="rankDisplay" class="text-xs font-bold mb-3 text-emerald-800 tracking-wide">正在感應森林能量...</div>
+            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800 tracking-wide">正在感應森林能量...</div>
+            
+            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">
+                累積禪定：0 分鐘
+            </div>
+
             <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
@@ -161,7 +165,6 @@
                 <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 森林能量累積榜</h2>
                 <div id="leaderboard" class="space-y-2 text-xs"></div>
             </div>
-
             <div class="card p-5">
                 <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 夥伴們的練習心得日誌</h2>
                 <div id="historyLogs" class="space-y-6 max-h-80 overflow-y-auto pr-2 text-xs"></div>
@@ -188,8 +191,9 @@
         ];
 
         let cachedUserScores = {};
-        let musicStarted = false;
+        let cachedUserMinutes = {}; // 新增：存儲累積分鐘數
 
+        let musicStarted = false;
         function startMusic() {
             if (!musicStarted) {
                 document.getElementById('bgMusic').play().then(() => { musicStarted = true; }).catch(() => {});
@@ -199,15 +203,23 @@
         async function fetchData() {
             const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
             if(error) return;
+            
             cachedUserScores = {};
-            logs.forEach(l => { cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins; });
-            updateUI(logs, cachedUserScores);
+            cachedUserMinutes = {}; // 重置分鐘計數器
+
+            logs.forEach(l => { 
+                cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins;
+                cachedUserMinutes[l.username] = (cachedUserMinutes[l.username] || 0) + (l.minutes || 0);
+            });
+            updateUI(logs, cachedUserScores, cachedUserMinutes);
         }
 
-        function updateUI(logs, userScores) {
+        function updateUI(logs, userScores, userMinutes) {
             const name = document.getElementById('username').value.trim();
             const myScore = userScores[name] || 0;
+            const myMinutes = userMinutes[name] || 0; // 取得當前使用者的總分鐘
 
+            // 更新排行榜
             const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 8).map(([n, s], i) => `
                 <div class="flex justify-between items-center p-2 ${n === name ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
@@ -216,13 +228,16 @@
                 </div>
             `).join('') || '尚無紀錄';
 
+            // 更新累積分鐘數顯示
+            document.getElementById('totalTimeDisplay').innerText = name ? `累積禪定：${myMinutes} 分鐘` : "累積禪定：0 分鐘";
+
+            // 更新進度條與文字
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            
-            // 整合：修正原本 JS 中的字串拼接語法錯誤
-            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 森林能量)` : "輸入相同名字以同步累積森林能量";
+            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 森林能量 (下一目標: ${next.req} 能量)` : "輸入名字以同步累積森林能量";
 
+            // 更新已覺醒精靈
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
                 <div class="flex flex-col items-center p-4 bg-white/90 rounded-2xl shadow-md unlocked-pet border border-emerald-100">
@@ -231,6 +246,7 @@
                 </div>
             `).join('');
 
+            // 更新歷史日誌
             document.getElementById('historyLogs').innerHTML = logs.map(l => {
                 const date = new Date(l.created_at);
                 const timeStr = `${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()} ${date.getHours().toString().padStart(2,'0')}:${date.getMinutes().toString().padStart(2,'0')}`;
