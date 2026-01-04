@@ -229,7 +229,7 @@
             `).join('') || '尚無紀錄';
 
             // 更新累積分鐘數顯示
-            document.getElementById('totalTimeDisplay').innerText = name ? `累積禪定：${myMinutes} 分鐘` : "累積禪定：0 分鐘";
+            document.getElementById('totalTimeDisplay').innerText = name ? `累積禪定時間：${myMinutes} 分鐘` : "累積禪定時間：0 分鐘";
 
             // 更新進度條與文字
             const next = characters.find(c => c.req > myScore) || characters[9];
