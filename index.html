@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - 森林能量累積中</title>
+    <title>台科領寒假禪定打卡平台 - 一起來累積森林能量吧！</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -39,29 +39,26 @@
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
         }
 
-        /* 提醒按鈕樣式 */
-        .remind-btn {
-            background: #06C755; /* Line 綠 */
-            color: white;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .remind-btn:hover { background: #05a346; transform: scale(1.05); }
-
         @keyframes modalShow {
             from { opacity: 0; transform: scale(0.8) translateY(20px); }
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
         .modal-content { animation: modalShow 0.4s cubic-bezier(0.17, 0.89, 0.32, 1.49); }
 
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .animate-rotate { animation: rotate 10s linear infinite; }
+
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
         .unlocked-pet { animation: float 3s infinite ease-in-out; }
+
+        #historyLogs::-webkit-scrollbar { width: 5px; }
+        #historyLogs::-webkit-scrollbar-thumb { background: #6ee7b7; border-radius: 10px; }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
@@ -69,6 +66,9 @@
     <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
         <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95 overflow-hidden">
+            <div class="absolute inset-0 opacity-10 animate-rotate pointer-events-none">
+                <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 to-transparent"></div>
+            </div>
             <div class="relative z-10">
                 <div class="text-5xl mb-4">✨</div>
                 <h2 class="text-2xl font-black text-emerald-800 mb-2">能量注入成功！</h2>
@@ -81,12 +81,14 @@
     <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
         <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95">
+            <div class="absolute -top-12 left-1/2 -translate-x-1/2 w-24 h-24 bg-yellow-300 rounded-full blur-2xl opacity-50"></div>
             <h2 class="text-2xl font-black text-emerald-800 mb-2">🎊 恭喜進化！</h2>
-            <div class="bg-emerald-50 rounded-3xl p-6 mb-6">
+            <p class="text-sm text-emerald-600 mb-6">你的能量感應到了新夥伴</p>
+            <div class="bg-emerald-50 rounded-3xl p-6 mb-6 shadow-inner border border-emerald-100">
                 <img id="modalImg" src="" class="w-24 h-24 mx-auto drop-shadow-2xl mb-3">
                 <div id="modalName" class="text-xl font-bold text-emerald-900"></div>
             </div>
-            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold hover:bg-emerald-700">太棒了！</button>
+            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-emerald-700 transition-colors">太棒了！</button>
         </div>
     </div>
 
@@ -103,25 +105,25 @@
         </header>
 
         <div class="card p-5 text-center">
-            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800">正在感應森林能量...</div>
-            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">累積禪定時間：0 分鐘</div>
-            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
-                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800 tracking-wide">正在感應森林能量...</div>
+            
+            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">
+                累積禪定時間：0 分鐘
             </div>
-        </div>
-        <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+
+            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
             <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
                 <span>🌱 種子</span><span>🌲 守護森林</span>
             </div>
         </div>
-    
+
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-[11px] font-bold text-emerald-900 ml-1">我是誰～</label>
-                    <input type="text" id="username" placeholder="輸入名字" class="w-full p-3 text-sm rounded-xl border border-emerald-100 outline-none" oninput="startMusic(); fetchData();">
+                    <input type="text" id="username" placeholder="輸入相同名字" class="w-full p-3 text-sm rounded-xl border border-emerald-100 outline-none" oninput="startMusic(); fetchData();">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] font-bold text-emerald-900 ml-1">禪定時間(分鐘)</label>
