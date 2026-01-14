@@ -68,7 +68,7 @@
             <div class="relative z-10">
                 <div class="text-5xl mb-4">✨</div>
                 <h2 class="text-2xl font-black text-emerald-800 mb-2">能量注入成功！</h2>
-                <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點能量</p>
+                <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點森林能量</p>
                 <button onclick="closeSuccessModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">確認</button>
             </div>
         </div>
@@ -102,7 +102,13 @@
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
         </div>
-
+        <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
+                <span>🌱 種子</span><span>🌲 守護森林</span>
+            </div>
+        </div>
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
@@ -114,7 +120,7 @@
                     <input type="number" id="minutes" placeholder="分鐘" class="w-full p-3 text-sm rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500">
                 </div>
             </div>
-            <textarea id="note" placeholder="當下的心情..." class="w-full p-3 text-sm h-20 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500"></textarea>
+            <textarea id="note" placeholder="當下的心情紀錄..." class="w-full p-3 text-sm h-20 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500"></textarea>
             <button onclick="saveRecord()" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all text-sm">送出紀錄 ‧ 注入森林能量</button>
         </div>
 
@@ -170,7 +176,7 @@
         }
 
         function sendLineReminder(targetName) {
-            const message = encodeURIComponent(`${targetName}，你今天禪定了嗎？🌲\n快來累積能量解鎖精靈吧！✨\n網址：${window.location.href}`);
+            const message = encodeURIComponent(`${targetName}，你今天禪定了嗎？🌲\n快來累積能量解鎖森林精靈吧！✨\n網址：${window.location.href}`);
             window.open(`https://line.me/R/msg/text/?${message}`, '_blank');
         }
 
@@ -195,18 +201,22 @@
             const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
                 <div class="flex justify-between items-center p-2 ${n === name ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
-                    <span class="font-bold">${i+1}. ${n} <span class="text-[9px] font-normal opacity-60">(${s} pts)</span></span>
-                    ${n !== name ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold w-4">${i+1}.</span>
+                        <span>${n}</span>
+                        <span class="text-[9px] text-emerald-600 font-mono">${s} 點森林能量</span>
+                    </div>
+                    ${n !== name ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒夥伴！</button>` : ''}
                 </div>
             `).join('') || '尚無紀錄';
 
             // 2. 更新進度條
-            document.getElementById('totalTimeDisplay').innerText = name ? `累積：${userMinutes[name] || 0} 分鐘` : "累積：0 分鐘";
+            document.getElementById('totalTimeDisplay').innerText = name ? `累積禪定時間：${userMinutes[name] || 0} 分鐘` : "累積禪定時間：0 分鐘";
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = name ? `☀️進度：${myScore} / 下一目標: ${next.req}` : "輸入名字以同步進度";
-
+            document.getElementById('rankDisplay').innerText = name ? `☀️目前進度：${myScore} 點森林能量 (下一目標: ${next.req} 點森林能量)` : "下方輸入名字以同步進度";
+            
             // 3. 更新已解鎖精靈
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
@@ -246,7 +256,7 @@
                             <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">${dateTag}</span>
                             <span class="text-[9px] text-emerald-500 font-mono">${timeTag}</span>
                         </div>
-                        <div class="text-[11px] font-bold text-emerald-900 mb-1">能量注入：${l.coins} 點</div>
+                        <div class="text-[11px] font-bold text-emerald-900 mb-1">能量注入：${l.coins} 點森林能量</div>
                         <div class="text-[10px] text-emerald-700 bg-white/50 p-2 rounded-lg h-20 overflow-y-auto italic leading-relaxed">
                             "${l.note}"
                         </div>
@@ -261,13 +271,13 @@
             const username = document.getElementById('username').value.trim();
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
-            if(!username || isNaN(minutes) || !note) return alert('請填寫完整');
+            if(!username || isNaN(minutes) || !note) return alert('請填寫完整資料 or 格式不完整');
 
             let coins = 0;
             if (minutes >= 30) coins = 40;
             else if (minutes >= 20) coins = 30;
             else if (minutes >= 10) coins = 10;
-            else return alert('最少 10 分鐘喔！');
+            else return alert('最少需禪定 10 分鐘喔！');
 
             const currentScore = cachedUserScores[username] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
