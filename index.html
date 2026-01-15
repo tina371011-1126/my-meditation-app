@@ -194,38 +194,60 @@
         };
 
         async function handleLogin() {
-            const user = document.getElementById('loginUser').value.trim();
-            const pass = document.getElementById('loginPass').value.trim();
-            const hint = document.getElementById('loginHint').value.trim();
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value.trim();
+    const hint = document.getElementById('loginHint').value.trim();
+    const loginBtn = event.target; // 獲取點擊的按鈕
 
-            if(!user || !pass) return alert('請輸入代號與密碼');
+    if(!user || !pass) return alert('請輸入代號與密碼');
 
-            // 驗證邏輯：從資料庫抓取該用戶最後一筆紀錄比對密碼
-            const { data, error } = await client
-                .from('meditation_logs')
-                .select('password, password_hint')
-                .eq('username', user)
-                .order('created_at', { ascending: false })
-                .limit(1);
+    // 1. 視覺提示：登入中
+    const originalBtnText = loginBtn.innerText;
+    loginBtn.innerText = "感應中...";
+    loginBtn.disabled = true;
 
-            if (data && data.length > 0) {
-                if (data[0].password && data[0].password !== pass) {
-                    return alert('密碼錯誤！請重新輸入或查看提示。');
-                }
+    try {
+        // 2. 從資料庫抓取該用戶的紀錄
+        const { data, error } = await client
+            .from('meditation_logs')
+            .select('password, password_hint')
+            .eq('username', user)
+            .order('created_at', { ascending: false });
+
+        // 3. 邏輯判斷
+        if (data && data.length > 0) {
+            const latestRecord = data[0];
+            
+            // 如果這份資料有設定密碼，且與輸入的不符
+            if (latestRecord.password && latestRecord.password !== pass) {
+                alert('❌ 密碼錯誤！\n如果你忘記了，請點擊下方查看提示。');
+                loginBtn.innerText = originalBtnText;
+                loginBtn.disabled = false;
+                return; // 中斷登入
             }
-
-            localStorage.setItem('forest_user', user);
-            localStorage.setItem('forest_pass', pass);
-            localStorage.setItem('forest_hint', hint || (data && data[0]?.password_hint) || "");
-            
-            currentUser = user;
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('username').value = user;
-            document.getElementById('displayUser').innerText = `修行者：${user}`;
-            
-            startMusic();
-            fetchData();
         }
+
+        // 4. 登入成功：存入本地並更新狀態
+        localStorage.setItem('forest_user', user);
+        localStorage.setItem('forest_pass', pass);
+        localStorage.setItem('forest_hint', hint || (data && data[0]?.password_hint) || "");
+        
+        currentUser = user;
+        document.getElementById('loginOverlay').classList.add('hidden');
+        document.getElementById('username').value = user;
+        document.getElementById('displayUser').innerText = `修行者：${user}`;
+        
+        startMusic();
+        fetchData();
+        
+    } catch (err) {
+        console.error("登入異常:", err);
+        alert("森林感應不穩，請稍後再試。");
+    } finally {
+        loginBtn.innerText = originalBtnText;
+        loginBtn.disabled = false;
+    }
+}
 
         async function forgotPassword() {
             const user = document.getElementById('loginUser').value.trim();
