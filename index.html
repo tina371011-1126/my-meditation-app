@@ -8,7 +8,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
-            background: url('https://lh3.googleusercontent.com/u/0/d/1YQAYwbwwn-GJJE0S41aIHWiDlIXJilWc=w1920-h1080');
+            /* 修正為 HTTPS 穩定的森林背景圖，避免瀏覽器安全警告 */
+            background: url('https://images.unsplash.com/photo-1511497584788-8767fe771d21?auto=format&fit=crop&w=1920&q=80');
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
@@ -67,11 +68,11 @@
             <p class="text-[10px] text-emerald-600 mb-6">初次進入請自訂密碼與提示</p>
             <div class="space-y-3">
                 <input type="text" id="loginUser" placeholder="使用者代號 (例：台科小林)" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
-                <input type="password" id="loginPass" placeholder="自訂密碼" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
-                <input type="text" id="loginHint" placeholder="密碼提示 (例：我的生日)" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
+                <input type="password" id="loginPass" placeholder="輸入密碼" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
+                <input type="text" id="loginHint" placeholder="密碼提示 (第一次登入必填)" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
                 
                 <div class="flex flex-col gap-3 pt-2">
-                    <button onclick="handleLogin()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all">進入森林</button>
+                    <button id="loginActionBtn" onclick="handleLogin()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all">進入森林</button>
                     <button onclick="forgotPassword()" class="text-[10px] text-emerald-600/70 hover:text-emerald-800 font-bold underline decoration-dotted">
                         忘記密碼？查看我的密碼提示
                     </button>
@@ -193,67 +194,63 @@
             }
         };
 
+        // 整合密碼驗證的登入邏輯
         async function handleLogin() {
-    const user = document.getElementById('loginUser').value.trim();
-    const pass = document.getElementById('loginPass').value.trim();
-    const hint = document.getElementById('loginHint').value.trim();
-    const loginBtn = event.target; // 獲取點擊的按鈕
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            const hint = document.getElementById('loginHint').value.trim();
+            const btn = document.getElementById('loginActionBtn');
 
-    if(!user || !pass) return alert('請輸入代號與密碼');
+            if(!user || !pass) return alert('請輸入代號與密碼');
 
-    // 1. 視覺提示：登入中
-    const originalBtnText = loginBtn.innerText;
-    loginBtn.innerText = "感應中...";
-    loginBtn.disabled = true;
+            btn.innerText = "感應能量中...";
+            btn.disabled = true;
 
-    try {
-        // 2. 從資料庫抓取該用戶的紀錄
-        const { data, error } = await client
-            .from('meditation_logs')
-            .select('password, password_hint')
-            .eq('username', user)
-            .order('created_at', { ascending: false });
+            try {
+                // 抓取該用戶最後一筆資料確認密碼
+                const { data, error } = await client
+                    .from('meditation_logs')
+                    .select('password, password_hint')
+                    .eq('username', user)
+                    .order('created_at', { ascending: false })
+                    .limit(1);
 
-        // 3. 邏輯判斷
-        if (data && data.length > 0) {
-            const latestRecord = data[0];
-            
-            // 如果這份資料有設定密碼，且與輸入的不符
-            if (latestRecord.password && latestRecord.password !== pass) {
-                alert('❌ 密碼錯誤！\n如果你忘記了，請點擊下方查看提示。');
-                loginBtn.innerText = originalBtnText;
-                loginBtn.disabled = false;
-                return; // 中斷登入
+                if (data && data.length > 0) {
+                    const latest = data[0];
+                    // 如果資料庫有密碼且不符
+                    if (latest.password && latest.password !== pass) {
+                        alert('❌ 密碼不正確！\n若忘記密碼，請點擊下方的查看提示。');
+                        btn.innerText = "進入森林";
+                        btn.disabled = false;
+                        return;
+                    }
+                }
+
+                // 驗證成功或新用戶
+                localStorage.setItem('forest_user', user);
+                localStorage.setItem('forest_pass', pass);
+                localStorage.setItem('forest_hint', hint || (data && data[0]?.password_hint) || "");
+                
+                currentUser = user;
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('username').value = user;
+                document.getElementById('displayUser').innerText = `修行者：${user}`;
+                
+                startMusic();
+                fetchData();
+            } catch (e) {
+                alert('森林連結異常，請稍後再試');
+            } finally {
+                btn.innerText = "進入森林";
+                btn.disabled = false;
             }
         }
 
-        // 4. 登入成功：存入本地並更新狀態
-        localStorage.setItem('forest_user', user);
-        localStorage.setItem('forest_pass', pass);
-        localStorage.setItem('forest_hint', hint || (data && data[0]?.password_hint) || "");
-        
-        currentUser = user;
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('username').value = user;
-        document.getElementById('displayUser').innerText = `修行者：${user}`;
-        
-        startMusic();
-        fetchData();
-        
-    } catch (err) {
-        console.error("登入異常:", err);
-        alert("森林感應不穩，請稍後再試。");
-    } finally {
-        loginBtn.innerText = originalBtnText;
-        loginBtn.disabled = false;
-    }
-}
-
         async function forgotPassword() {
             const user = document.getElementById('loginUser').value.trim();
-            if(!user) return alert('請先輸入您的代號，系統才能幫您找尋提示！');
+            if(!user) return alert('請先輸入代號！');
 
-            const { data, error } = await client
+            const { data } = await client
                 .from('meditation_logs')
                 .select('password_hint')
                 .eq('username', user)
@@ -262,14 +259,14 @@
                 .limit(1);
 
             if(data && data.length > 0 && data[0].password_hint) {
-                alert(`💡 修行者「${user}」的密碼提示是：\n\n【 ${data[0].password_hint} 】\n\n想起密碼了嗎？`);
+                alert(`💡 「${user}」的密碼提示：\n【 ${data[0].password_hint} 】`);
             } else {
-                alert('找不到您的提示紀錄。如果是第一次登入，請直接自訂密碼進入。若需進一步協助，請聯繫管理員。');
+                alert('找不到提示。如果是新用戶，請直接輸入代號與密碼登入。');
             }
         }
 
         function logout() {
-            if(confirm("確定要更換身份嗎？")) {
+            if(confirm("確定要登出更換身份嗎？")) {
                 localStorage.clear();
                 location.reload();
             }
@@ -302,7 +299,7 @@
                 <div class="flex justify-between items-center p-2 ${n === currentUser ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
                     <span><span class="font-bold w-4 inline-block text-emerald-400">${i+1}.</span> ${n}</span>
                     <div class="flex items-center gap-2">
-                        <span class="text-[9px] text-emerald-600 font-mono">${s} 點森林能量</span>
+                        <span class="text-[9px] text-emerald-600 font-mono">${s} 點</span>
                         ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
                     </div>
                 </div>
@@ -312,7 +309,7 @@
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = `☀️ 目前森林能量：${myScore} (下一階段: ${next.req}點森林能量}`;
+            document.getElementById('rankDisplay').innerText = `☀️ 目前森林能量：${myScore} (下一階段: ${next.req})`;
 
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
@@ -326,7 +323,7 @@
                 <div class="border-b border-emerald-100/50 pb-3">
                     <div class="flex justify-between font-bold text-emerald-900 mb-1">
                         <span>${l.username} <span class="text-[9px] font-normal text-emerald-500">(${l.minutes}m)</span></span>
-                        <span class="text-emerald-600 text-[10px]">+${l.coins} 點森林能量</span>
+                        <span class="text-emerald-600 text-[10px]">+${l.coins} 點</span>
                     </div>
                     <div class="p-2 bg-white/40 rounded italic leading-tight">"${l.note}"</div>
                 </div>`).join('');
@@ -343,7 +340,7 @@
                         <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">${d.getMonth()+1}/${d.getDate()}</span>
                         <span class="text-[9px] text-emerald-500 font-mono">${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}</span>
                     </div>
-                    <div class="text-[11px] font-bold text-emerald-900 mb-1">注入：${l.coins} 點森林能量</div>
+                    <div class="text-[11px] font-bold text-emerald-900 mb-1">注入：${l.coins} 點</div>
                     <div class="text-[10px] text-emerald-700 bg-white/50 p-2 rounded-lg h-20 overflow-y-auto italic">"${l.note}"</div>
                 </div>`;
             }).join('') || '<div class="text-xs text-emerald-500 italic p-4">還沒有紀錄...</div>';
@@ -359,7 +356,6 @@
 
             const pass = localStorage.getItem('forest_pass');
             const hint = localStorage.getItem('forest_hint');
-
             const currentScore = cachedUserScores[currentUser] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
 
@@ -379,6 +375,8 @@
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 fetchData();
+            } else {
+                alert('發送失敗，請確認網路連線與資料庫權限。');
             }
         }
 
