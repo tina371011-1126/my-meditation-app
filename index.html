@@ -121,7 +121,13 @@
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
         </div>
-        
+        <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
+                <span>🌱 種子</span><span>🌲 守護森林</span>
+            </div>
+        </div>
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
@@ -252,7 +258,7 @@
                 <div class="flex justify-between items-center p-2 ${n === currentUser ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
                     <span><span class="font-bold w-4 inline-block text-emerald-400">${i+1}.</span> ${n}</span>
                     <div class="flex items-center gap-2">
-                        <span class="text-[9px] text-emerald-600 font-mono">${s} 森林能量</span>
+                        <span class="text-[9px] text-emerald-600 font-mono">${s} 點森林能量</span>
                         ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
                     </div>
                 </div>
@@ -280,7 +286,7 @@
                 <div class="border-b border-emerald-100/50 pb-3">
                     <div class="flex justify-between font-bold text-emerald-900 mb-1">
                         <span>${l.username} <span class="text-[9px] font-normal text-emerald-500">(${l.minutes}m)</span></span>
-                        <span class="text-emerald-600 text-[10px]">+${l.coins} 森林能量</span>
+                        <span class="text-emerald-600 text-[10px]">+${l.coins} 點森林能量</span>
                     </div>
                     <div class="p-2 bg-white/40 rounded italic leading-tight">"${l.note}"</div>
                 </div>`;
