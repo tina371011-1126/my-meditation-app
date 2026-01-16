@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - 森林通行證 (Google版)</title>
+    <title>台科領寒假禪定打卡平台 - Google 雲端版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -13,106 +13,61 @@
             background-position: center top;
             background-attachment: fixed;
             background-repeat: no-repeat;
-            image-rendering: -webkit-optimize-contrast;
             color: #064e3b;
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
         }
-
-        .title-gradient {
-            color: #166534;
-            filter: drop-shadow(0 2px 4px rgba(255,255,255,0.8)) drop-shadow(0 0 10px rgba(255,255,255,0.5));
-            letter-spacing: 0.1em;
-        }
-
         .card { 
-            background: rgba(255, 255, 255, 0.85); 
+            background: rgba(255, 255, 255, 0.88); 
             backdrop-filter: blur(12px);
             border-radius: 24px; 
             border: 1px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
         }
-
         .progress-fill { 
             height: 100%; 
             background: linear-gradient(90deg, #34d399, #059669); 
-            box-shadow: 0 0 10px rgba(52, 211, 153, 0.5);
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-
-        .remind-btn {
-            background: #06C755; 
-            color: white;
-            padding: 2px 8px;
-            border-radius: 6px;
-            font-size: 10px;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
+        .remind-btn { background: #06C755; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .unlocked-pet { animation: float 3s infinite ease-in-out; }
-        
-        /* Google Button Style */
-        .google-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            background-color: white;
-            border: 1px solid #e5e7eb;
-            color: #374151;
-            transition: all 0.2s;
-        }
-        .google-btn:hover {
-            background-color: #f9fafb;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: white; border: 1px solid #ddd; transition: all 0.2s; }
+        .google-btn:hover { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
 
-    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/40 backdrop-blur-xl px-6">
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 backdrop-blur-md px-6 hidden">
         <div class="card p-8 w-full max-w-sm text-center">
             <h2 class="text-2xl font-black text-emerald-800 mb-2">🌲 森林通行證</h2>
-            <p class="text-xs text-emerald-600 mb-6">請使用 Google 帳號感應進入森林</p>
-            
-            <div class="space-y-4">
-                <button onclick="handleGoogleLogin()" class="google-btn w-full py-3 rounded-xl font-bold shadow-sm active:scale-95">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google Logo">
-                    使用 Google 登入
-                </button>
-                <div class="text-[10px] text-emerald-600/60">
-                    登入即代表您同意加入修行行列
-                </div>
-            </div>
+            <p class="text-xs text-emerald-600 mb-8">使用 Google 帳號感應進入森林</p>
+            <button onclick="handleGoogleLogin()" class="google-btn w-full py-4 rounded-2xl font-bold active:scale-95">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6">
+                Google 帳號登入
+            </button>
         </div>
     </div>
 
     <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95 overflow-hidden">
+        <div class="relative card p-8 w-full max-w-sm text-center">
             <div class="text-5xl mb-4">✨</div>
-            <h2 class="text-2xl font-black text-emerald-800 mb-2">森林能量注入成功！</h2>
-            <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點森林能量</p>
-            <button onclick="closeSuccessModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">確認</button>
+            <h2 class="text-2xl font-black text-emerald-800 mb-2">注入成功！</h2>
+            <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點能量</p>
+            <button onclick="document.getElementById('successModal').classList.add('hidden')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">確認</button>
         </div>
     </div>
 
     <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
-        <div class="modal-content relative card p-8 w-full max-w-sm text-center border-emerald-400 bg-white/95">
+        <div class="relative card p-8 w-full max-w-sm text-center bg-white">
             <h2 class="text-2xl font-black text-emerald-800 mb-2">🎊 恭喜進化！</h2>
             <div class="bg-emerald-50 rounded-3xl p-6 mb-6">
                 <img id="modalImg" src="" class="w-24 h-24 mx-auto drop-shadow-2xl mb-3">
                 <div id="modalName" class="text-xl font-bold text-emerald-900"></div>
             </div>
-            <button onclick="closeModal()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">太棒了！</button>
+            <button onclick="document.getElementById('evoModal').classList.add('hidden')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">太棒了！</button>
         </div>
     </div>
 
@@ -121,65 +76,54 @@
     </audio>
 
     <div class="max-w-md mx-auto space-y-6">
-        <header class="text-center py-6 flex flex-col items-center">
-            <h1 class="text-3xl font-black title-gradient">台科領寒假禪定打卡</h1>
-            <div class="mt-2 flex items-center gap-2">
-                <img id="userAvatar" src="" class="w-6 h-6 rounded-full border border-emerald-500 hidden">
-                <span id="displayUser" class="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold shadow-sm">載入中...</span>
-                <button onclick="logout()" class="text-[9px] text-emerald-600/50 hover:text-red-500 underline">登出</button>
+        <header class="text-center py-6">
+            <h1 class="text-3xl font-black text-emerald-900">台科領寒假禪定打卡</h1>
+            <div class="mt-3 flex items-center justify-center gap-2">
+                <img id="userAvatar" src="" class="w-6 h-6 rounded-full hidden">
+                <span id="displayUser" class="text-[10px] bg-emerald-700 text-white px-3 py-1 rounded-full font-bold">驗證中...</span>
+                <button onclick="logout()" class="text-[9px] text-emerald-600 underline">登出</button>
             </div>
         </header>
 
         <div class="card p-5 text-center">
-            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800 tracking-wide">正在感應森林能量...</div>
-            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">累積禪定時間：0 分鐘</div>
-            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden shadow-inner">
+            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800">載入中...</div>
+            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">累積：0 分鐘</div>
+            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden">
                 <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
             </div>
-            <div class="flex justify-between mt-2 text-[10px] text-emerald-700 font-bold px-1">
-                <span>🌱 種子</span><span>🌲 守護森林</span>
-            </div>
         </div>
-    
+
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">修行者</label>
-                    <input type="text" id="usernameField" disabled class="w-full p-3 text-sm rounded-xl bg-emerald-50 text-emerald-700 font-bold border-none ring-1 ring-emerald-100 opacity-80">
+                    <label class="text-[11px] font-bold text-emerald-900">修行者</label>
+                    <input type="text" id="usernameField" disabled class="w-full p-3 text-sm rounded-xl bg-emerald-50 opacity-70">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">時間(分鐘)</label>
-                    <input type="number" id="minutes" placeholder="分鐘" class="w-full p-3 text-sm rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500">
+                    <label class="text-[11px] font-bold text-emerald-900">時間(分鐘)</label>
+                    <input type="number" id="minutes" placeholder="10" class="w-full p-3 text-sm rounded-xl outline-none ring-1 ring-emerald-100 focus:ring-emerald-500">
                 </div>
             </div>
-            <textarea id="note" placeholder="記錄此時此刻的心情..." class="w-full p-3 text-sm h-20 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500"></textarea>
-            <button onclick="saveRecord()" class="w-full bg-emerald-600 text-white py-3.5 rounded-xl font-bold shadow-md active:scale-95 transition-all text-sm">送出紀錄 ‧ 注入森林能量</button>
+            <textarea id="note" placeholder="記錄此時此刻的心情..." class="w-full p-3 text-sm h-20 rounded-xl outline-none ring-1 ring-emerald-100 focus:ring-emerald-500"></textarea>
+            <button onclick="saveRecord()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">送出紀錄</button>
         </div>
 
         <div id="unlockedGrid" class="grid grid-cols-3 gap-4 px-2"></div>
 
         <div class="card p-5">
-            <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">🏆 森林能量累積榜</h2>
+            <h2 class="font-bold mb-3 text-sm border-b pb-2">🏆 森林能量累積榜</h2>
             <div id="leaderboard" class="space-y-2 text-xs"></div>
         </div>
 
         <div class="card p-5">
-            <h2 class="font-bold mb-3 text-emerald-900 text-sm border-b border-emerald-100 pb-2">📖 夥伴練習日誌</h2>
-            <div id="historyLogs" class="space-y-6 max-h-60 overflow-y-auto pr-2 text-xs"></div>
-        </div>
-
-        <div id="personalSection" class="hidden space-y-3">
-            <h2 class="font-bold text-emerald-900 text-sm ml-2 flex items-center gap-2">
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> 我的專屬禪定紀錄
-            </h2>
-            <div id="personalSlider" class="flex gap-4 overflow-x-auto pb-4 hide-scrollbar snap-x"></div>
+            <h2 class="font-bold mb-3 text-sm border-b pb-2">📖 夥伴練習日誌</h2>
+            <div id="historyLogs" class="space-y-6 max-h-60 overflow-y-auto text-xs"></div>
         </div>
     </div>
 
     <script>
-        // 設定 Supabase
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3'; // 公開 Key
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const characters = [
@@ -196,186 +140,132 @@
         ];
 
         let currentUser = "";
-        let currentUserEmail = "";
         let musicStarted = false;
-        let cachedLogs = [];
         let cachedUserScores = {};
 
-        // 初始化：檢查登入狀態
-        window.onload = async () => {
-            // 監聽登入狀態改變
-            client.auth.onAuthStateChange((event, session) => {
-                if (session) {
-                    // 已登入
-                    const user = session.user;
-                    // 優先使用 Google 名字，沒有就用 email 前綴
-                    currentUser = user.user_metadata.full_name || user.email.split('@')[0];
-                    currentUserEmail = user.email;
-                    
-                    document.getElementById('loginOverlay').classList.add('hidden');
-                    document.getElementById('displayUser').innerText = `修行者：${currentUser}`;
-                    document.getElementById('usernameField').value = currentUser;
-                    
-                    // 顯示頭像 (如果有)
-                    if(user.user_metadata.avatar_url) {
-                        const avatar = document.getElementById('userAvatar');
-                        avatar.src = user.user_metadata.avatar_url;
-                        avatar.classList.remove('hidden');
-                    }
+        // 初始化與監聽狀態
+        async function init() {
+            const { data: { session } } = await client.auth.getSession();
+            updateAuthState(session);
 
-                    fetchData();
-                    startMusic();
-                } else {
-                    // 未登入，顯示登入遮罩
-                    document.getElementById('loginOverlay').classList.remove('hidden');
-                }
+            client.auth.onAuthStateChange((_event, session) => {
+                updateAuthState(session);
             });
-        };
+        }
 
-        // Google 登入功能
-        async function handleGoogleLogin() {
-            try {
-                const { data, error } = await client.auth.signInWithOAuth({
-                    provider: 'google',
-                    options: {
-                        redirectTo: window.location.href // 登入後回到當前頁面
-                    }
-                });
-                if (error) throw error;
-            } catch (error) {
-                console.error("Google 登入失敗:", error);
-                alert("登入連線異常，請稍後再試");
+        function updateAuthState(session) {
+            const overlay = document.getElementById('loginOverlay');
+            if (session) {
+                overlay.classList.add('hidden');
+                currentUser = session.user.user_metadata.full_name || session.user.email.split('@')[0];
+                document.getElementById('displayUser').innerText = `修行者：${currentUser}`;
+                document.getElementById('usernameField').value = currentUser;
+                if(session.user.user_metadata.avatar_url) {
+                    const img = document.getElementById('userAvatar');
+                    img.src = session.user.user_metadata.avatar_url;
+                    img.classList.remove('hidden');
+                }
+                fetchData();
+                startMusic();
+            } else {
+                overlay.classList.remove('hidden');
+                currentUser = "";
             }
         }
 
-        // 登出功能
+        async function handleGoogleLogin() {
+            const { error } = await client.auth.signInWithOAuth({
+                provider: 'google',
+                options: { 
+                    redirectTo: window.location.origin,
+                    queryParams: { prompt: 'select_account' }
+                }
+            });
+            if (error) alert("登入錯誤: " + error.message);
+        }
+
         async function logout() {
-            if(confirm("確定要登出森林嗎？")) {
-                await client.auth.signOut();
-                location.reload();
-            }
+            await client.auth.signOut();
+            location.reload();
         }
 
         function startMusic() {
             if (!musicStarted) {
-                document.getElementById('bgMusic').play().then(() => { musicStarted = true; }).catch(() => {});
+                document.getElementById('bgMusic').play().catch(() => {});
+                musicStarted = true;
             }
         }
 
         async function fetchData() {
             const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
-            if(error) return;
-            cachedLogs = logs;
+            if (error) return;
+
             cachedUserScores = {};
             let userMinutes = {};
-            
-            logs.forEach(l => { 
+            logs.forEach(l => {
                 cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins;
                 userMinutes[l.username] = (userMinutes[l.username] || 0) + (l.minutes || 0);
             });
-            updateUI(logs, cachedUserScores, userMinutes);
-        }
 
-        function updateUI(logs, userScores, userMinutes) {
-            const myScore = userScores[currentUser] || 0;
-            const sorted = Object.entries(userScores).sort((a,b) => b[1]-a[1]);
-            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
-                <div class="flex justify-between items-center p-2 ${n === currentUser ? 'bg-emerald-100 border-l-4 border-emerald-500' : 'bg-white/50'} rounded shadow-sm">
-                    <span><span class="font-bold w-4 inline-block text-emerald-400">${i+1}.</span> ${n}</span>
-                    <div class="flex items-center gap-2">
-                        <span class="text-[9px] text-emerald-600 font-mono">${s} 點森林能量</span>
-                        ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
-                    </div>
-                </div>
-            `).join('') || '尚無紀錄';
-
-            document.getElementById('totalTimeDisplay').innerText = `累積禪定時間：${userMinutes[currentUser] || 0} 分鐘`;
+            const myScore = cachedUserScores[currentUser] || 0;
             const next = characters.find(c => c.req > myScore) || characters[9];
-            const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
-            document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = `☀️ 目前森林能量：${myScore} (下一階段: ${next.req}點森林能量)`;
+            document.getElementById('progressBarFill').style.width = Math.min(100, (myScore/next.req)*100) + '%';
+            document.getElementById('rankDisplay').innerText = `☀️ 能量：${myScore} / 下一階段：${next.req}`;
+            document.getElementById('totalTimeDisplay').innerText = `累積：${userMinutes[currentUser] || 0} 分鐘`;
 
-            const unlocked = characters.filter(c => myScore >= c.req);
-            document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
-                <div class="flex flex-col items-center p-4 bg-white/90 rounded-2xl shadow-sm unlocked-pet border border-white">
-                    <img src="${c.img}" class="w-10 h-10 object-contain">
-                    <span class="text-[9px] mt-2 font-bold text-emerald-800">${c.name}</span>
+            const sorted = Object.entries(cachedUserScores).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
+                <div class="flex justify-between items-center p-2 ${n===currentUser?'bg-emerald-100 border-l-4 border-emerald-500':'bg-white/50'} rounded">
+                    <span>${i+1}. ${n}</span>
+                    <span class="font-mono text-emerald-600">${s} pts</span>
                 </div>
             `).join('');
 
             document.getElementById('historyLogs').innerHTML = logs.map(l => `
-                <div class="border-b border-emerald-100/50 pb-3">
-                    <div class="flex justify-between font-bold text-emerald-900 mb-1">
-                        <span>${l.username} <span class="text-[9px] font-normal text-emerald-500">(${l.minutes}m)</span></span>
-                        <span class="text-emerald-600 text-[10px]">+${l.coins} 點森林能量</span>
-                    </div>
-                    <div class="p-2 bg-white/40 rounded italic leading-tight">"${l.note}"</div>
-                </div>`).join('');
+                <div class="border-b border-emerald-100 pb-2">
+                    <div class="flex justify-between font-bold"><span>${l.username} (${l.minutes}m)</span><span class="text-emerald-600">+${l.coins}</span></div>
+                    <div class="italic text-gray-600">"${l.note}"</div>
+                </div>
+            `).join('');
 
-            const personalSection = document.getElementById('personalSection');
-            const personalSlider = document.getElementById('personalSlider');
-            personalSection.classList.remove('hidden');
-            const myLogs = logs.filter(l => l.username === currentUser);
-            personalSlider.innerHTML = myLogs.map(l => {
-                const d = new Date(l.created_at);
-                return `
-                <div class="snap-center shrink-0 w-64 card p-4 bg-emerald-50/90 border-emerald-200">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="bg-emerald-600 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">${d.getMonth()+1}/${d.getDate()}</span>
-                        <span class="text-[9px] text-emerald-500 font-mono">${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}</span>
-                    </div>
-                    <div class="text-[11px] font-bold text-emerald-900 mb-1">注入：${l.coins} 點森林能量</div>
-                    <div class="text-[10px] text-emerald-700 bg-white/50 p-2 rounded-lg h-20 overflow-y-auto italic">"${l.note}"</div>
-                </div>`;
-            }).join('') || '<div class="text-xs text-emerald-500 italic p-4">還沒有紀錄...</div>';
+            document.getElementById('unlockedGrid').innerHTML = characters.filter(c => myScore >= c.req).map(c => `
+                <div class="flex flex-col items-center p-3 bg-white/80 rounded-2xl unlocked-pet shadow-sm">
+                    <img src="${c.img}" class="w-10 h-10 object-contain">
+                    <span class="text-[8px] mt-1 font-bold">${c.name}</span>
+                </div>
+            `).join('');
         }
 
         async function saveRecord() {
-            // 安全檢查：確保已登入
-            const session = await client.auth.getSession();
-            if(!session.data.session) return alert("請先重新登入");
-
-            const minutes = parseInt(document.getElementById('minutes').value);
+            const mins = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
-            if(isNaN(minutes) || !note) return alert('請填寫完整內容');
+            if (!mins || !note || mins < 10) return alert("最少需禪定 10 分鐘並寫下心情內容唷！");
 
-            let coins = (minutes >= 30) ? 40 : (minutes >= 20) ? 30 : (minutes >= 10) ? 10 : 0;
-            if (coins === 0) return alert('禪定最少需要 10 分鐘喔！');
-
+            let coins = (mins >= 30) ? 40 : (mins >= 20) ? 30 : 10;
             const currentScore = cachedUserScores[currentUser] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
 
-            // 寫入資料庫：現在不需要存密碼了，因為有 Google 驗證
-            const { error } = await client.from('meditation_logs').insert([{ 
-                username: currentUser, // 使用 Google 帳號名稱
-                minutes, 
-                note, 
-                coins
-                // 不需要 password 欄位
-            }]);
+            const { error } = await client.from('meditation_logs').insert([{ username: currentUser, minutes: mins, note, coins }]);
 
-            if(!error) {
+            if (!error) {
                 const afterLevel = characters.filter(c => (currentScore + coins) >= c.req).length;
-                if (afterLevel > beforeLevel) showEvoModal(characters[afterLevel - 1]);
-                else showSuccessModal(coins);
-                document.getElementById('minutes').value = '';
-                document.getElementById('note').value = '';
+                if (afterLevel > beforeLevel) {
+                    document.getElementById('modalImg').src = characters[afterLevel-1].img;
+                    document.getElementById('modalName').innerText = characters[afterLevel-1].name;
+                    document.getElementById('evoModal').classList.remove('hidden');
+                } else {
+                    document.getElementById('successCoins').innerText = coins;
+                    document.getElementById('successModal').classList.remove('hidden');
+                }
+                document.getElementById('minutes').value = "";
+                document.getElementById('note').value = "";
                 fetchData();
             } else {
-                console.error("寫入錯誤", error);
-                alert("寫入失敗：" + error.message);
+                alert("注入失敗: " + error.message);
             }
         }
 
-        function sendLineReminder(targetName) {
-            const message = encodeURIComponent(`${targetName}，你今天禪定了嗎？🌲\n森林精靈正在等你注入能量！✨`);
-            window.open(`https://line.me/R/msg/text/?${message}`, '_blank');
-        }
-        function showSuccessModal(coins) { document.getElementById('successCoins').innerText = coins; document.getElementById('successModal').classList.remove('hidden'); }
-        function closeSuccessModal() { document.getElementById('successModal').classList.add('hidden'); }
-        function showEvoModal(spirit) { document.getElementById('modalImg').src = spirit.img; document.getElementById('modalName').innerText = spirit.name; document.getElementById('evoModal').classList.remove('hidden'); }
-        function closeModal() { document.getElementById('evoModal').classList.add('hidden'); }
-
+        init();
         setInterval(fetchData, 15000);
     </script>
 </body>
