@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - 森林通行證</title>
+    <title>台科領寒假禪定打卡平台 - 森林通行證 (Google版)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { 
-            background: url('https://lh3.googleusercontent.com/u/0/d/1YQAYwbwwn-GJJE0S41aIHWiDlIXJilWc=w1920-h1080');
+            background: url('https://images.unsplash.com/photo-1448375240586-dfd8d30168f7?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
             background-position: center top;
             background-attachment: fixed;
@@ -57,6 +57,22 @@
             50% { transform: translateY(-10px); }
         }
         .unlocked-pet { animation: float 3s infinite ease-in-out; }
+        
+        /* Google Button Style */
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: white;
+            border: 1px solid #e5e7eb;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        .google-btn:hover {
+            background-color: #f9fafb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
@@ -64,17 +80,15 @@
     <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/40 backdrop-blur-xl px-6">
         <div class="card p-8 w-full max-w-sm text-center">
             <h2 class="text-2xl font-black text-emerald-800 mb-2">🌲 森林通行證</h2>
-            <p class="text-[10px] text-emerald-600 mb-6">初次進入請自訂密碼與提示</p>
-            <div class="space-y-3">
-                <input type="text" id="loginUser" placeholder="使用者代號 (例：台科小林)" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
-                <input type="password" id="loginPass" placeholder="自訂密碼" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
-                <input type="text" id="loginHint" placeholder="密碼提示 (例：我的生日)" class="w-full p-3 rounded-xl border-none outline-none ring-1 ring-emerald-100 focus:ring-emerald-500 text-sm">
-                
-                <div class="flex flex-col gap-3 pt-2">
-                    <button onclick="handleLogin()" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-all">進入森林</button>
-                    <button onclick="forgotPassword()" class="text-[10px] text-emerald-600/70 hover:text-emerald-800 font-bold underline decoration-dotted">
-                        忘記密碼？查看我的密碼提示
-                    </button>
+            <p class="text-xs text-emerald-600 mb-6">請使用 Google 帳號感應進入森林</p>
+            
+            <div class="space-y-4">
+                <button onclick="handleGoogleLogin()" class="google-btn w-full py-3 rounded-xl font-bold shadow-sm active:scale-95">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google Logo">
+                    使用 Google 登入
+                </button>
+                <div class="text-[10px] text-emerald-600/60">
+                    登入即代表您同意加入修行行列
                 </div>
             </div>
         </div>
@@ -110,8 +124,9 @@
         <header class="text-center py-6 flex flex-col items-center">
             <h1 class="text-3xl font-black title-gradient">台科領寒假禪定打卡</h1>
             <div class="mt-2 flex items-center gap-2">
+                <img id="userAvatar" src="" class="w-6 h-6 rounded-full border border-emerald-500 hidden">
                 <span id="displayUser" class="text-[10px] bg-emerald-600 text-white px-3 py-1 rounded-full font-bold shadow-sm">載入中...</span>
-                <button onclick="logout()" class="text-[9px] text-emerald-600/50 hover:text-red-500 underline">登出帳號</button>
+                <button onclick="logout()" class="text-[9px] text-emerald-600/50 hover:text-red-500 underline">登出</button>
             </div>
         </header>
 
@@ -129,8 +144,8 @@
         <div class="card p-6 space-y-4">
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900 ml-1">修行者代號</label>
-                    <input type="text" id="username" disabled class="w-full p-3 text-sm rounded-xl bg-emerald-50 text-emerald-700 font-bold border-none ring-1 ring-emerald-100 opacity-80">
+                    <label class="text-[11px] font-bold text-emerald-900 ml-1">修行者</label>
+                    <input type="text" id="usernameField" disabled class="w-full p-3 text-sm rounded-xl bg-emerald-50 text-emerald-700 font-bold border-none ring-1 ring-emerald-100 opacity-80">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] font-bold text-emerald-900 ml-1">時間(分鐘)</label>
@@ -162,8 +177,9 @@
     </div>
 
     <script>
+        // 設定 Supabase
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3'; // 公開 Key
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const characters = [
@@ -179,98 +195,63 @@
             { name: '星系主', req: 900, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
         ];
 
-        let currentUser = localStorage.getItem('forest_user') || "";
+        let currentUser = "";
+        let currentUserEmail = "";
         let musicStarted = false;
         let cachedLogs = [];
         let cachedUserScores = {};
 
-        window.onload = () => {
-            if(currentUser) {
-                document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('username').value = currentUser;
-                document.getElementById('displayUser').innerText = `修行者：${currentUser}`;
-                fetchData();
-            }
+        // 初始化：檢查登入狀態
+        window.onload = async () => {
+            // 監聽登入狀態改變
+            client.auth.onAuthStateChange((event, session) => {
+                if (session) {
+                    // 已登入
+                    const user = session.user;
+                    // 優先使用 Google 名字，沒有就用 email 前綴
+                    currentUser = user.user_metadata.full_name || user.email.split('@')[0];
+                    currentUserEmail = user.email;
+                    
+                    document.getElementById('loginOverlay').classList.add('hidden');
+                    document.getElementById('displayUser').innerText = `修行者：${currentUser}`;
+                    document.getElementById('usernameField').value = currentUser;
+                    
+                    // 顯示頭像 (如果有)
+                    if(user.user_metadata.avatar_url) {
+                        const avatar = document.getElementById('userAvatar');
+                        avatar.src = user.user_metadata.avatar_url;
+                        avatar.classList.remove('hidden');
+                    }
+
+                    fetchData();
+                    startMusic();
+                } else {
+                    // 未登入，顯示登入遮罩
+                    document.getElementById('loginOverlay').classList.remove('hidden');
+                }
+            });
         };
 
-        async function handleLogin() {
-    const user = document.getElementById('loginUser').value.trim();
-    const pass = document.getElementById('loginPass').value.trim();
-    const hint = document.getElementById('loginHint').value.trim();
-    const loginBtn = event.target; // 獲取點擊的按鈕
-
-    if(!user || !pass) return alert('請輸入代號與密碼');
-
-    // 1. 視覺提示：登入中
-    const originalBtnText = loginBtn.innerText;
-    loginBtn.innerText = "感應中...";
-    loginBtn.disabled = true;
-
-    try {
-        // 2. 從資料庫抓取該用戶的紀錄
-        const { data, error } = await client
-            .from('meditation_logs')
-            .select('password, password_hint')
-            .eq('username', user)
-            .order('created_at', { ascending: false });
-
-        // 3. 邏輯判斷
-        if (data && data.length > 0) {
-            const latestRecord = data[0];
-            
-            // 如果這份資料有設定密碼，且與輸入的不符
-            if (latestRecord.password && latestRecord.password !== pass) {
-                alert('❌ 密碼錯誤！\n如果你忘記了，請點擊下方查看提示。');
-                loginBtn.innerText = originalBtnText;
-                loginBtn.disabled = false;
-                return; // 中斷登入
+        // Google 登入功能
+        async function handleGoogleLogin() {
+            try {
+                const { data, error } = await client.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.href // 登入後回到當前頁面
+                    }
+                });
+                if (error) throw error;
+            } catch (error) {
+                console.error("Google 登入失敗:", error);
+                alert("登入連線異常，請稍後再試");
             }
         }
 
-        // 4. 登入成功：存入本地並更新狀態
-        localStorage.setItem('forest_user', user);
-        localStorage.setItem('forest_pass', pass);
-        localStorage.setItem('forest_hint', hint || (data && data[0]?.password_hint) || "");
-        
-        currentUser = user;
-        document.getElementById('loginOverlay').classList.add('hidden');
-        document.getElementById('username').value = user;
-        document.getElementById('displayUser').innerText = `修行者：${user}`;
-        
-        startMusic();
-        fetchData();
-        
-    } catch (err) {
-        console.error("登入異常:", err);
-        alert("森林感應不穩，請稍後再試。");
-    } finally {
-        loginBtn.innerText = originalBtnText;
-        loginBtn.disabled = false;
-    }
-}
-
-        async function forgotPassword() {
-            const user = document.getElementById('loginUser').value.trim();
-            if(!user) return alert('請先輸入您的代號，系統才能幫您找尋提示！');
-
-            const { data, error } = await client
-                .from('meditation_logs')
-                .select('password_hint')
-                .eq('username', user)
-                .not('password_hint', 'is', null)
-                .order('created_at', { ascending: false })
-                .limit(1);
-
-            if(data && data.length > 0 && data[0].password_hint) {
-                alert(`💡 修行者「${user}」的密碼提示是：\n\n【 ${data[0].password_hint} 】\n\n想起密碼了嗎？`);
-            } else {
-                alert('找不到您的提示紀錄。如果是第一次登入，請直接自訂密碼進入。若需進一步協助，請聯繫管理員。');
-            }
-        }
-
-        function logout() {
-            if(confirm("確定要更換身份嗎？")) {
-                localStorage.clear();
+        // 登出功能
+        async function logout() {
+            if(confirm("確定要登出森林嗎？")) {
+                await client.auth.signOut();
                 location.reload();
             }
         }
@@ -312,7 +293,7 @@
             const next = characters.find(c => c.req > myScore) || characters[9];
             const prog = myScore >= 900 ? 100 : (myScore / next.req) * 100;
             document.getElementById('progressBarFill').style.width = prog + '%';
-            document.getElementById('rankDisplay').innerText = `☀️ 目前森林能量：${myScore} (下一階段: ${next.req}點森林能量}`;
+            document.getElementById('rankDisplay').innerText = `☀️ 目前森林能量：${myScore} (下一階段: ${next.req}點森林能量)`;
 
             const unlocked = characters.filter(c => myScore >= c.req);
             document.getElementById('unlockedGrid').innerHTML = unlocked.map(c => `
@@ -350,6 +331,10 @@
         }
 
         async function saveRecord() {
+            // 安全檢查：確保已登入
+            const session = await client.auth.getSession();
+            if(!session.data.session) return alert("請先重新登入");
+
             const minutes = parseInt(document.getElementById('minutes').value);
             const note = document.getElementById('note').value.trim();
             if(isNaN(minutes) || !note) return alert('請填寫完整內容');
@@ -357,19 +342,16 @@
             let coins = (minutes >= 30) ? 40 : (minutes >= 20) ? 30 : (minutes >= 10) ? 10 : 0;
             if (coins === 0) return alert('禪定最少需要 10 分鐘喔！');
 
-            const pass = localStorage.getItem('forest_pass');
-            const hint = localStorage.getItem('forest_hint');
-
             const currentScore = cachedUserScores[currentUser] || 0;
             const beforeLevel = characters.filter(c => currentScore >= c.req).length;
 
+            // 寫入資料庫：現在不需要存密碼了，因為有 Google 驗證
             const { error } = await client.from('meditation_logs').insert([{ 
-                username: currentUser, 
+                username: currentUser, // 使用 Google 帳號名稱
                 minutes, 
                 note, 
-                coins,
-                password: pass,
-                password_hint: hint
+                coins
+                // 不需要 password 欄位
             }]);
 
             if(!error) {
@@ -379,6 +361,9 @@
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 fetchData();
+            } else {
+                console.error("寫入錯誤", error);
+                alert("寫入失敗：" + error.message);
             }
         }
 
