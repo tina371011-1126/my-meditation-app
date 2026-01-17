@@ -3,195 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台科領寒假禪定打卡平台 - Google 雲端版</title>
+    <title>台科領奧秘靈視 - 禪定轉蛋版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        zen: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                            950: '#082f49', // 深海藍/夜空藍
+                        },
+                        gold: {
+                            DEFAULT: '#fbbf24',
+                            glow: '#fcd34d'
+                        }
+                    },
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'pulse-fast': 'pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
     <style>
         body { 
-            background: url('https://images.unsplash.com/photo-1448375240586-dfd8d30168f7?q=80&w=2070&auto=format&fit=crop');
+            /* 背景：深邃的星空或禪意花園 */
+            background: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=2070&auto=format&fit=crop');
             background-size: cover;
-            background-position: center top;
+            background-position: center center;
             background-attachment: fixed;
             background-repeat: no-repeat;
-            color: #064e3b;
+            color: #e0f2fe;
             font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif; 
         }
-        .card { 
-            background: rgba(255, 255, 255, 0.88); 
+
+        .glass-card { 
+            background: rgba(8, 47, 73, 0.85); /* zen-950 半透明 */
             backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border-radius: 24px; 
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
         }
-        .progress-fill { 
-            height: 100%; 
-            background: linear-gradient(90deg, #34d399, #059669); 
-            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1); 
+
+        .title-glow {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5), 0 0 20px rgba(56, 189, 248, 0.3);
         }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .remind-btn { background: #06C755; color: white; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: bold; }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        .unlocked-pet { animation: float 3s infinite ease-in-out; }
-        .google-btn { display: flex; align-items: center; justify-content: center; gap: 10px; background: white; border: 1px solid #ddd; transition: all 0.2s; }
-        .google-btn:hover { background: #f8f8f8; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+        /* 轉蛋特效 */
+        @keyframes gacha-shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5px, 5px) rotate(-5deg); }
+            50% { transform: translate(5px, -5px) rotate(5deg); }
+            75% { transform: translate(-5px, 5px) rotate(-5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .shaking { animation: gacha-shake 0.5s ease-in-out infinite; }
+
+        .spirit-card {
+            transition: all 0.3s ease;
+        }
+        .spirit-card:hover { transform: translateY(-5px); box-shadow: 0 0 15px rgba(251, 191, 36, 0.4); }
+        
+        /* 鎖定狀態的精靈 */
+        .locked-spirit { filter: grayscale(100%) brightness(0.3); opacity: 0.5; }
+        .unlocked-spirit { filter: drop-shadow(0 0 5px rgba(255,255,255,0.3)); }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%);
+            transition: all 0.3s;
+        }
+        .btn-gradient:hover { filter: brightness(1.1); box-shadow: 0 0 20px rgba(14, 165, 233, 0.4); }
+
+        .dark-input {
+            background-color: rgba(12, 74, 110, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: white;
+        }
+        .dark-input:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.2); }
     </style>
 </head>
-<body class="min-h-screen p-4 pb-24">
+<body class="min-h-screen p-4 pb-24 bg-zen-950">
 
-    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 backdrop-blur-md px-6 hidden">
-        <div class="card p-8 w-full max-w-sm text-center">
-            <h2 class="text-2xl font-black text-emerald-800 mb-2">🌲 森林通行證</h2>
-            <p class="text-xs text-emerald-600 mb-8">使用 Google 帳號感應進入森林</p>
-            <button onclick="handleGoogleLogin()" class="google-btn w-full py-4 rounded-2xl font-bold active:scale-95">
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md px-6 hidden">
+        <div class="glass-card p-8 w-full max-w-sm text-center border-t border-sky-500/30">
+            <h2 class="text-3xl font-black text-sky-300 mb-4 title-glow">🌌 奧秘靈視</h2>
+            <p class="text-sm text-sky-100/70 mb-8 tracking-wider">連結意識，開啟你的禪定圖鑑</p>
+            <button onclick="handleGoogleLogin()" class="w-full bg-white text-zen-900 py-4 rounded-2xl font-bold hover:bg-sky-50 transition-all flex items-center justify-center gap-2">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6">
-                Google 帳號登入
+                Google 帳號共鳴
             </button>
         </div>
     </div>
 
-    <div id="successModal" class="fixed inset-0 z-[60] flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
-        <div class="relative card p-8 w-full max-w-sm text-center">
-            <div class="text-5xl mb-4">✨</div>
-            <h2 class="text-2xl font-black text-emerald-800 mb-2">注入成功！</h2>
-            <p class="text-emerald-600 mb-6">獲得了 <span id="successCoins" class="text-3xl font-black text-emerald-500">0</span> 點能量</p>
-            <button onclick="document.getElementById('successModal').classList.add('hidden')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">確認</button>
-        </div>
-    </div>
-
-    <div id="evoModal" class="fixed inset-0 z-50 flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-emerald-900/60 backdrop-blur-md"></div>
-        <div class="relative card p-8 w-full max-w-sm text-center bg-white">
-            <h2 class="text-2xl font-black text-emerald-800 mb-2">🎊 恭喜進化！</h2>
-            <div class="bg-emerald-50 rounded-3xl p-6 mb-6">
-                <img id="modalImg" src="" class="w-24 h-24 mx-auto drop-shadow-2xl mb-3">
-                <div id="modalName" class="text-xl font-bold text-emerald-900"></div>
+    <div id="gachaModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-black/90 backdrop-blur-md"></div>
+        <div class="relative w-full max-w-sm text-center">
+            <div id="summoningPhase">
+                <div class="text-6xl mb-6 animate-bounce-slow">🔮</div>
+                <h2 class="text-2xl font-bold text-sky-300 mb-2 shaking">正在匯聚奧秘能量...</h2>
+                <p class="text-sky-500 text-sm">宇宙正在回應你的頻率</p>
             </div>
-            <button onclick="document.getElementById('evoModal').classList.add('hidden')" class="w-full bg-emerald-600 text-white py-3 rounded-xl font-bold">太棒了！</button>
+            
+            <div id="resultPhase" class="hidden transform transition-all duration-500 scale-0">
+                <div class="glass-card p-8 border-2 border-gold shadow-[0_0_50px_rgba(251,191,36,0.2)]">
+                    <h2 class="text-xl font-bold text-gold mb-2">✨ 奧秘顯現！</h2>
+                    <div class="my-6 relative">
+                        <div class="absolute inset-0 bg-gold/20 blur-xl rounded-full"></div>
+                        <img id="gachaImg" src="" class="w-32 h-32 mx-auto relative z-10 drop-shadow-2xl animate-pulse-fast">
+                    </div>
+                    <div id="gachaName" class="text-2xl font-black text-white mb-1"></div>
+                    <div id="gachaTag" class="text-xs bg-gold text-black px-2 py-1 rounded inline-block font-bold mb-4">NEW!</div>
+                    <p id="gachaDesc" class="text-xs text-sky-200 mb-6 italic"></p>
+                    <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold">收入圖鑑</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <audio id="bgMusic" loop preload="auto">
-        <source src="https://cdn.pixabay.com/audio/2022/03/24/audio_73130c2c13.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/download/audio/2022/10/25/audio_1d47458117.mp3?filename=meditation-impulse-124463.mp3" type="audio/mpeg">
     </audio>
 
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="text-center py-6">
-            <h1 class="text-3xl font-black text-emerald-900">台科領寒假禪定打卡</h1>
-            <div class="mt-3 flex items-center justify-center gap-2">
-                <img id="userAvatar" src="" class="w-6 h-6 rounded-full hidden">
-                <span id="displayUser" class="text-[10px] bg-emerald-700 text-white px-3 py-1 rounded-full font-bold">驗證中...</span>
-                <button onclick="logout()" class="text-[9px] text-emerald-600 underline">登出</button>
+    <div class="max-w-md mx-auto space-y-6 pt-4">
+        <header class="flex justify-between items-center py-2 px-2">
+            <div>
+                <h1 class="text-2xl font-black text-sky-200 title-glow">奧秘靈視調頻</h1>
+                <div class="text-xs text-sky-400 mt-1 flex gap-2">
+                    <span id="displayUser">...</span>
+                </div>
+            </div>
+            <div class="relative group">
+                <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-400 cursor-pointer">
+                <button onclick="logout()" class="absolute right-0 top-12 bg-zen-900 border border-sky-700 text-xs px-3 py-1 rounded hidden group-hover:block whitespace-nowrap z-50">登出</button>
             </div>
         </header>
 
-        <div class="card p-5 text-center">
-            <div id="rankDisplay" class="text-xs font-bold mb-2 text-emerald-800">載入中...</div>
-            <div id="totalTimeDisplay" class="text-[10px] font-bold text-emerald-600 mb-3 bg-white/50 py-1 px-3 rounded-full inline-block">累積：0 分鐘</div>
-            <div class="h-3 w-full bg-emerald-100 rounded-full overflow-hidden">
-                <div id="progressBarFill" class="progress-fill" style="width: 0%"></div>
+        <div class="glass-card p-5 flex justify-between items-center">
+            <div class="text-center w-1/2 border-r border-sky-800">
+                <div class="text-xs text-sky-400 mb-1">累積調頻</div>
+                <div id="totalTimeDisplay" class="text-2xl font-bold text-white font-mono">0<span class="text-xs ml-1">min</span></div>
+            </div>
+            <div class="text-center w-1/2">
+                <div class="text-xs text-sky-400 mb-1">蒐集進度</div>
+                <div id="collectionRate" class="text-2xl font-bold text-gold font-mono">0/20</div>
             </div>
         </div>
 
-        <div class="card p-6 space-y-4">
-            <div class="grid grid-cols-2 gap-3">
+        <div class="glass-card p-6 space-y-4 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-500/20 rounded-full blur-3xl pointer-events-none"></div>
+            
+            <h2 class="text-sm font-bold text-sky-300 border-b border-sky-800/50 pb-2 mb-4">🧘 開始調頻 (Gacha Time)</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900">修行者</label>
-                    <input type="text" id="usernameField" disabled class="w-full p-3 text-sm rounded-xl bg-emerald-50 opacity-70">
+                    <label class="text-[10px] text-sky-400">紀錄日期</label>
+                    <input type="text" value="Today" disabled class="w-full p-2 text-center text-sm rounded-lg dark-input opacity-70">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[11px] font-bold text-emerald-900">時間(分鐘)</label>
-                    <input type="number" id="minutes" placeholder="10" class="w-full p-3 text-sm rounded-xl outline-none ring-1 ring-emerald-100 focus:ring-emerald-500">
+                    <label class="text-[10px] text-sky-400">分鐘數</label>
+                    <input type="number" id="minutes" placeholder="Min" class="w-full p-2 text-center text-sm rounded-lg dark-input focus:ring-2 focus:ring-sky-500">
                 </div>
             </div>
-            <textarea id="note" placeholder="記錄此時此刻的心情..." class="w-full p-3 text-sm h-20 rounded-xl outline-none ring-1 ring-emerald-100 focus:ring-emerald-500"></textarea>
-            <button onclick="saveRecord()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-bold shadow-lg active:scale-95">送出紀錄</button>
+            <textarea id="note" placeholder="記錄此時此刻的覺察..." class="w-full p-3 text-sm h-20 rounded-lg dark-input resize-none"></textarea>
+            
+            <button onclick="saveRecordAndGacha()" class="w-full btn-gradient py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 group">
+                <span>匯聚奧秘 ‧ 隨機召喚</span>
+                <span class="group-hover:animate-spin-slow text-lg">💠</span>
+            </button>
+            <p class="text-[10px] text-center text-sky-500/80">每次打卡皆有 100% 機率獲得一隻隨機禪定精靈</p>
         </div>
 
-        <div id="unlockedGrid" class="grid grid-cols-3 gap-4 px-2"></div>
-
-        <div class="card p-5">
-            <h2 class="font-bold mb-3 text-sm border-b pb-2">🏆 森林能量累積榜</h2>
-            <div id="leaderboard" class="space-y-2 text-xs"></div>
+        <div class="glass-card p-5">
+            <h2 class="font-bold mb-4 text-sm text-sky-300 flex justify-between items-center">
+                <span>📚 奧秘圖鑑</span>
+                <span class="text-[10px] bg-sky-900 px-2 py-1 rounded text-sky-400">點擊查看</span>
+            </h2>
+            <div id="spiritGrid" class="grid grid-cols-4 gap-3">
+                </div>
         </div>
 
-        <div class="card p-5">
-            <h2 class="font-bold mb-3 text-sm border-b pb-2">📖 夥伴練習日誌</h2>
-            <div id="historyLogs" class="space-y-6 max-h-60 overflow-y-auto text-xs"></div>
+        <div class="glass-card p-5">
+            <div class="flex gap-4 border-b border-sky-800/50 mb-4">
+                <button onclick="switchTab('logs')" id="tab-logs" class="text-xs font-bold pb-2 border-b-2 border-sky-400 text-sky-100 transition-colors">觀星手札</button>
+                <button onclick="switchTab('rank')" id="tab-rank" class="text-xs font-bold pb-2 border-b-2 border-transparent text-sky-600 transition-colors">能量排行</button>
+            </div>
+            
+            <div id="content-logs" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
+            <div id="content-rank" class="space-y-2 hidden"></div>
         </div>
     </div>
 
     <script>
+        // ⚠️ 請填入你的 Supabase 設定
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const characters = [
-            { name: '懶石頭', req: 0, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
-            { name: '雲朵雞', req: 100, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
-            { name: '綠毛蟲', req: 200, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
-            { name: '波波貓', req: 300, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
-            { name: '狐狸仙', req: 400, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
-            { name: '鹿角獸', req: 500, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
-            { name: '獨角鯨', req: 600, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
-            { name: '大白龍', req: 700, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
-            { name: '火鳳凰', req: 800, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
-            { name: '星系主', req: 900, img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
+        // 🌟 20隻禪定系精靈 (機率均等)
+        const spiritPool = [
+            { id: 1, name: '初心苔蘚', desc: '柔軟且謙卑的初發心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
+            { id: 2, name: '數息小童', desc: '一二三四... 專注呼吸', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
+            { id: 3, name: '不倒翁念頭', desc: '念頭來去，我自歸中', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
+            { id: 4, name: '止語貝殼', desc: '收藏著宇宙的寂靜', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
+            { id: 5, name: '公案青蛙', desc: '撲通一聲，頓悟了', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { id: 6, name: '定心石怪', desc: '如如不動，堅若磐石', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { id: 7, name: '香燃煙靈', desc: '無常變幻，隨風而逝', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { id: 8, name: '木魚響響', desc: '保持清醒的節奏', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { id: 9, name: '蓮座花精', desc: '出淤泥而不染', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { id: 10, name: '虛空水母', desc: '透明無礙的空性之海', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' },
+            { id: 11, name: '觀照之眼', desc: '看見事物的真實樣貌', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' }, 
+            { id: 12, name: '慈悲雲朵', desc: '降下溫柔的甘露', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
+            { id: 13, name: '脈輪光球', desc: '旋轉的七彩能量核心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
+            { id: 14, name: '般若卷軸', desc: '古老的智慧靈魂', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
+            { id: 15, name: '須彌山獸', desc: '世界的中心，穩重如山', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { id: 16, name: '金剛鑽狼', desc: '斬斷煩惱的銳利心性', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { id: 17, name: '涅槃鳳凰', desc: '超越生死的終極自在', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { id: 18, name: '真如星靈', desc: '就是這樣，接受當下', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { id: 19, name: '頓悟雷光', desc: '劃破無明的覺醒瞬間', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { id: 20, name: '萬法歸一者', desc: '宇宙萬物，本自一體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
         ];
 
         let currentUser = "";
+        let currentInventory = {}; // { '初心苔蘚': 2, ... }
         let musicStarted = false;
-        let cachedUserScores = {};
 
-        // 初始化與監聽狀態
         async function init() {
             const { data: { session } } = await client.auth.getSession();
-            updateAuthState(session);
-
-            client.auth.onAuthStateChange((_event, session) => {
-                updateAuthState(session);
-            });
+            handleAuth(session);
+            client.auth.onAuthStateChange((_e, session) => handleAuth(session));
         }
 
-        function updateAuthState(session) {
+        function handleAuth(session) {
             const overlay = document.getElementById('loginOverlay');
             if (session) {
                 overlay.classList.add('hidden');
                 currentUser = session.user.user_metadata.full_name || session.user.email.split('@')[0];
-                document.getElementById('displayUser').innerText = `修行者：${currentUser}`;
-                document.getElementById('usernameField').value = currentUser;
+                document.getElementById('displayUser').innerText = currentUser;
                 if(session.user.user_metadata.avatar_url) {
-                    const img = document.getElementById('userAvatar');
-                    img.src = session.user.user_metadata.avatar_url;
-                    img.classList.remove('hidden');
+                    document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
                 }
                 fetchData();
                 startMusic();
             } else {
                 overlay.classList.remove('hidden');
-                currentUser = "";
             }
         }
 
         async function handleGoogleLogin() {
-            const { error } = await client.auth.signInWithOAuth({
+            await client.auth.signInWithOAuth({
                 provider: 'google',
-                options: { 
-                    redirectTo: window.location.origin,
-                    queryParams: { prompt: 'select_account' }
-                }
+                options: { redirectTo: window.location.origin, queryParams: { prompt: 'select_account' } }
             });
-            if (error) alert("登入錯誤: " + error.message);
         }
 
         async function logout() {
-            await client.auth.signOut();
-            location.reload();
+            if(confirm('確定要暫離奧秘之境嗎？')) {
+                await client.auth.signOut();
+                location.reload();
+            }
         }
 
         function startMusic() {
             if (!musicStarted) {
-                document.getElementById('bgMusic').play().catch(() => {});
+                document.getElementById('bgMusic').volume = 0.5;
+                document.getElementById('bgMusic').play().catch(()=>{});
                 musicStarted = true;
             }
         }
@@ -200,69 +285,171 @@
             const { data: logs, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
             if (error) return;
 
-            cachedUserScores = {};
-            let userMinutes = {};
-            logs.forEach(l => {
-                cachedUserScores[l.username] = (cachedUserScores[l.username] || 0) + l.coins;
-                userMinutes[l.username] = (userMinutes[l.username] || 0) + (l.minutes || 0);
+            // 1. 計算總時間與整理圖鑑
+            let totalMins = 0;
+            currentInventory = {};
+            
+            // 排行榜資料
+            let userStats = {};
+
+            logs.forEach(log => {
+                // 處理個人總時間與圖鑑
+                if (log.username === currentUser) {
+                    totalMins += (log.minutes || 0);
+                    // 解析隱藏在 Note 裡的精靈資料: "心情內容... {{Spirit:初心苔蘚}}"
+                    const match = log.note.match(/{{Spirit:(.*?)}}/);
+                    if (match && match[1]) {
+                        const spiritName = match[1];
+                        currentInventory[spiritName] = (currentInventory[spiritName] || 0) + 1;
+                    }
+                }
+
+                // 處理排行榜 (計算總分鐘數)
+                userStats[log.username] = (userStats[log.username] || 0) + (log.minutes || 0);
             });
 
-            const myScore = cachedUserScores[currentUser] || 0;
-            const next = characters.find(c => c.req > myScore) || characters[9];
-            document.getElementById('progressBarFill').style.width = Math.min(100, (myScore/next.req)*100) + '%';
-            document.getElementById('rankDisplay').innerText = `☀️ 能量：${myScore} / 下一階段：${next.req}`;
-            document.getElementById('totalTimeDisplay').innerText = `累積：${userMinutes[currentUser] || 0} 分鐘`;
+            // 2. 更新 UI
+            document.getElementById('totalTimeDisplay').innerHTML = `${totalMins}<span class="text-xs ml-1">min</span>`;
+            
+            // 更新圖鑑顯示
+            const uniqueCount = Object.keys(currentInventory).length;
+            document.getElementById('collectionRate').innerText = `${uniqueCount}/20`;
+            renderInventory();
 
-            const sorted = Object.entries(cachedUserScores).sort((a,b) => b[1]-a[1]);
-            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, s], i) => `
-                <div class="flex justify-between items-center p-2 ${n===currentUser?'bg-emerald-100 border-l-4 border-emerald-500':'bg-white/50'} rounded">
-                    <span>${i+1}. ${n}</span>
-                    <span class="font-mono text-emerald-600">${s} pts</span>
-                </div>
-            `).join('');
+            // 更新日誌列表 (過濾掉 {{Spirit:xxx}})
+            document.getElementById('content-logs').innerHTML = logs.map(l => {
+                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                // 嘗試抓出這筆日誌獲得了什麼精靈 (如果有的話)
+                const spiritMatch = l.note.match(/{{Spirit:(.*?)}}/);
+                const spiritName = spiritMatch ? spiritMatch[1] : null;
+                const spiritObj = spiritPool.find(s => s.name === spiritName);
+                
+                return `
+                <div class="bg-sky-900/40 p-3 rounded-xl border border-sky-800/30">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="font-bold text-sky-200 text-xs">${l.username}</span>
+                        <span class="text-[10px] text-sky-500">${new Date(l.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="text-xs text-sky-100/80 mb-2">${cleanNote}</div>
+                    ${spiritName ? `
+                        <div class="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg w-fit">
+                            <span class="text-[9px] text-gold">獲得</span>
+                            <img src="${spiritObj?.img || ''}" class="w-4 h-4 rounded-full">
+                            <span class="text-[9px] text-sky-300 font-bold">${spiritName}</span>
+                        </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
 
-            document.getElementById('historyLogs').innerHTML = logs.map(l => `
-                <div class="border-b border-emerald-100 pb-2">
-                    <div class="flex justify-between font-bold"><span>${l.username} (${l.minutes}m)</span><span class="text-emerald-600">+${l.coins}</span></div>
-                    <div class="italic text-gray-600">"${l.note}"</div>
-                </div>
-            `).join('');
-
-            document.getElementById('unlockedGrid').innerHTML = characters.filter(c => myScore >= c.req).map(c => `
-                <div class="flex flex-col items-center p-3 bg-white/80 rounded-2xl unlocked-pet shadow-sm">
-                    <img src="${c.img}" class="w-10 h-10 object-contain">
-                    <span class="text-[8px] mt-1 font-bold">${c.name}</span>
+            // 更新排行榜
+            const sortedUsers = Object.entries(userStats).sort((a,b) => b[1]-a[1]);
+            document.getElementById('content-rank').innerHTML = sortedUsers.map(([u, m], i) => `
+                <div class="flex justify-between items-center p-3 bg-sky-900/30 rounded-xl border border-sky-800/30">
+                    <div class="flex items-center gap-3">
+                        <div class="w-6 h-6 rounded-full bg-sky-800 flex items-center justify-center text-xs font-bold text-sky-200">${i+1}</div>
+                        <span class="text-sm text-sky-100">${u}</span>
+                    </div>
+                    <span class="font-mono text-gold font-bold text-sm">${m} min</span>
                 </div>
             `).join('');
         }
 
-        async function saveRecord() {
+        function renderInventory() {
+            const grid = document.getElementById('spiritGrid');
+            grid.innerHTML = spiritPool.map(spirit => {
+                const count = currentInventory[spirit.name] || 0;
+                const isLocked = count === 0;
+                return `
+                    <div class="flex flex-col items-center group relative cursor-pointer" onclick="showSpiritDetails(${spirit.id}, ${count})">
+                        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-1 transition-all duration-300 ${isLocked ? 'bg-sky-900/50' : 'bg-gradient-to-b from-sky-800/50 to-sky-900/50 border border-gold/30 shadow-[0_0_10px_rgba(251,191,36,0.1)]'}">
+                            <img src="${spirit.img}" class="w-12 h-12 object-contain ${isLocked ? 'locked-spirit' : 'unlocked-spirit spirit-card'}">
+                        </div>
+                        ${!isLocked ? `<span class="absolute -top-1 -right-1 bg-gold text-black text-[9px] font-bold px-1.5 rounded-full border border-white">x${count}</span>` : ''}
+                        <span class="text-[9px] font-bold ${isLocked ? 'text-sky-700' : 'text-sky-200'}">${isLocked ? '???' : spirit.name}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function showSpiritDetails(id, count) {
+            if(count === 0) return; // 沒解鎖不能看
+            const s = spiritPool.find(p => p.id === id);
+            alert(`【${s.name}】\n${s.desc}\n\n目前擁有數量：${count} 隻`);
+        }
+
+        async function saveRecordAndGacha() {
             const mins = parseInt(document.getElementById('minutes').value);
-            const note = document.getElementById('note').value.trim();
-            if (!mins || !note || mins < 10) return alert("最少需禪定 10 分鐘並寫下心情內容唷！");
+            const rawNote = document.getElementById('note').value.trim();
+            if (!mins || mins < 10) return alert("至少需要禪定 10 分鐘才能進行奧秘召喚喔！");
+            if (!rawNote) return alert("請記錄下你的覺察或心情。");
 
-            let coins = (mins >= 30) ? 40 : (mins >= 20) ? 30 : 10;
-            const currentScore = cachedUserScores[currentUser] || 0;
-            const beforeLevel = characters.filter(c => currentScore >= c.req).length;
+            // 1. 執行抽獎 (1/20 機率均等)
+            const luckyIndex = Math.floor(Math.random() * spiritPool.length);
+            const wonSpirit = spiritPool[luckyIndex];
 
-            const { error } = await client.from('meditation_logs').insert([{ username: currentUser, minutes: mins, note, coins }]);
+            // 2. 顯示抽獎動畫
+            const modal = document.getElementById('gachaModal');
+            const summon = document.getElementById('summoningPhase');
+            const result = document.getElementById('resultPhase');
+            
+            modal.classList.remove('hidden');
+            summon.classList.remove('hidden');
+            result.classList.add('hidden', 'scale-0');
 
-            if (!error) {
-                const afterLevel = characters.filter(c => (currentScore + coins) >= c.req).length;
-                if (afterLevel > beforeLevel) {
-                    document.getElementById('modalImg').src = characters[afterLevel-1].img;
-                    document.getElementById('modalName').innerText = characters[afterLevel-1].name;
-                    document.getElementById('evoModal').classList.remove('hidden');
+            // 3. 延遲後寫入資料庫並顯示結果
+            setTimeout(async () => {
+                // 將精靈名稱隱藏在 Note 中儲存
+                const finalNote = `${rawNote} {{Spirit:${wonSpirit.name}}}`;
+                
+                const { error } = await client.from('meditation_logs').insert([
+                    { username: currentUser, minutes: mins, note: finalNote, coins: 0 } // coins 欄位暫時不用，設為 0
+                ]);
+
+                if (!error) {
+                    // 顯示結果
+                    summon.classList.add('hidden');
+                    result.classList.remove('hidden');
+                    
+                    // Trigger reflow for animation
+                    void result.offsetWidth; 
+                    result.classList.remove('scale-0');
+
+                    // 填入資料
+                    document.getElementById('gachaImg').src = wonSpirit.img;
+                    document.getElementById('gachaName').innerText = wonSpirit.name;
+                    document.getElementById('gachaDesc').innerText = wonSpirit.desc;
+                    
+                    // 檢查是否是新獲得的
+                    const isNew = !currentInventory[wonSpirit.name];
+                    document.getElementById('gachaTag').style.display = isNew ? 'inline-block' : 'none';
+                    document.getElementById('gachaTag').innerText = isNew ? 'NEW!' : 'LEVEL UP';
+
+                    // 清空輸入
+                    document.getElementById('minutes').value = "";
+                    document.getElementById('note').value = "";
+                    fetchData(); // 背景更新數據
                 } else {
-                    document.getElementById('successCoins').innerText = coins;
-                    document.getElementById('successModal').classList.remove('hidden');
+                    alert("儲存失敗，請檢查網路: " + error.message);
+                    modal.classList.add('hidden');
                 }
-                document.getElementById('minutes').value = "";
-                document.getElementById('note').value = "";
-                fetchData();
-            } else {
-                alert("注入失敗: " + error.message);
-            }
+            }, 2500); // 2.5秒的緊張等待時間
+        }
+
+        function closeGacha() {
+            document.getElementById('gachaModal').classList.add('hidden');
+        }
+
+        function switchTab(tab) {
+            document.getElementById('content-logs').classList.add('hidden');
+            document.getElementById('content-rank').classList.add('hidden');
+            document.getElementById('tab-logs').classList.replace('text-sky-100', 'text-sky-600');
+            document.getElementById('tab-logs').classList.replace('border-sky-400', 'border-transparent');
+            document.getElementById('tab-rank').classList.replace('text-sky-100', 'text-sky-600');
+            document.getElementById('tab-rank').classList.replace('border-sky-400', 'border-transparent');
+
+            document.getElementById(`content-${tab}`).classList.remove('hidden');
+            document.getElementById(`tab-${tab}`).classList.replace('text-sky-600', 'text-sky-100');
+            document.getElementById(`tab-${tab}`).classList.replace('border-transparent', 'border-sky-400');
         }
 
         init();
