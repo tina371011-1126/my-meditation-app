@@ -263,10 +263,16 @@
             const wonSpirit = spiritPool[Math.floor(Math.random() * spiritPool.length)];
             const finalNote = `${rawNote} {{Spirit:${wonSpirit.name}}}`;
 
-            // 建立一筆帶有指定日期的紀錄
-            const { error } = await client.from('meditation_logs').insert([
-                { username: currentUser, minutes: mins, note: finalNote, created_at: new Date(pickDate).toISOString() }
-            ]);
+            // 建立一筆帶有指定日期的紀錄（補上 coins 避免資料庫報錯）
+const { error } = await client.from('meditation_logs').insert([
+    { 
+        username: currentUser, 
+        minutes: mins, 
+        note: finalNote, 
+        coins: 0, // 補上這個數值
+        created_at: new Date(pickDate).toISOString() 
+    }
+]);
 
             if (!error) {
                 document.getElementById('gachaImg').src = wonSpirit.img;
