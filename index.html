@@ -3,27 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定精靈 - 完整終極版</title>
+    <title>禪定精靈 - 終極功能整合版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { background: linear-gradient(to bottom, #082f49, #0f172a); color: #e0f2fe; font-family: 'PingFang TC', sans-serif; overflow-x: hidden; }
+        body { background: linear-gradient(to bottom, #082f49, #0f172a); color: #e0f2fe; font-family: 'PingFang TC', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(56, 189, 248, 0.2); }
-        .calendar-dot { width: 8px; height: 8px; border-radius: 50%; margin: 2px auto; }
+        .calendar-dot { width: 6px; height: 6px; border-radius: 50%; margin: 2px auto; }
         .dot-filled { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
-        .dot-empty { border: 1px solid rgba(56, 189, 248, 0.4); }
+        .dot-empty { border: 1px solid rgba(56, 189, 248, 0.3); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); }
-        .btn-disabled { background: #334155 !important; opacity: 0.5; cursor: not-allowed; }
+        .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); transition: all 0.3s ease; }
+        .btn-disabled { background: #334155 !important; opacity: 0.5; cursor: not-allowed; pointer-events: none; }
         
-        /* 召喚動畫 */
-        @keyframes super-shake {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2) rotate(5deg); }
-            100% { transform: scale(1.4); opacity: 0; }
+        /* 召喚與震動動畫 */
+        @keyframes crystal-summon {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(1.2) rotate(10deg); filter: brightness(1.5); }
+            100% { transform: scale(1.5); opacity: 0; }
         }
-        .crystal-active { animation: super-shake 1.5s forwards; }
+        .crystal-active { animation: crystal-summon 1.2s forwards ease-in; }
         #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
     </style>
 </head>
@@ -32,69 +31,68 @@
     <canvas id="particleCanvas"></canvas>
 
     <div id="summoningOverlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-2xl hidden">
-        <div id="mainBall" class="w-32 h-32 rounded-full bg-gradient-to-br from-sky-300 to-blue-600 shadow-[0_0_50px_#3b82f6] flex items-center justify-center relative">
-            <span class="text-5xl animate-pulse">🔮</span>
+        <div id="mainBall" class="w-32 h-32 rounded-full bg-gradient-to-br from-sky-300 to-blue-600 shadow-[0_0_60px_#3b82f6] flex items-center justify-center">
+            <span class="text-5xl">🔮</span>
         </div>
-        <p id="summonText" class="mt-12 text-gold font-bold tracking-[0.4em] animate-pulse text-lg">能量共鳴中...</p>
-    </div>
-
-    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-6 hidden">
-        <div class="glass-card p-8 w-full max-w-sm text-center">
-            <h2 class="text-2xl font-black text-sky-300 mb-6">🧞 禪定精靈顯現</h2>
-            <button onclick="handleGoogleLogin()" class="w-full bg-white text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
-                Google 帳號連結
-            </button>
-        </div>
+        <p class="mt-12 text-gold font-bold tracking-[0.4em] animate-pulse">正在感應禪定能量...</p>
     </div>
 
     <div id="gachaModal" class="fixed inset-0 z-[300] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold">
-            <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 獲得新夥伴 ✨</h2>
-            <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]">
+        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl">
+            <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 禪定精靈現身 ✨</h2>
+            <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_15px_rgba(251,191,36,0.6)]">
             <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
-            <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic"></p>
-            <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold">收入圖鑑</button>
+            <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic px-4"></p>
+            <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3.5 rounded-xl font-bold shadow-lg active:scale-95">收入圖鑑</button>
         </div>
     </div>
 
     <div class="max-w-md mx-auto space-y-6 pt-2">
-        <header class="flex justify-between items-center py-2">
+        <header class="flex justify-between items-center py-2 px-1">
             <div>
                 <h1 class="text-xl font-black text-sky-200 tracking-wider">禪定精靈調頻</h1>
-                <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">讀取能量中...</p>
+                <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">連結能量中...</p>
             </div>
             <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-500/50 cursor-pointer" onclick="logout()">
         </header>
 
         <div class="glass-card p-5">
-            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">精靈紀錄</h2>
+            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">禪定紀錄月曆</h2>
+            <div class="grid grid-cols-7 gap-1 text-center text-[9px] text-sky-500 mb-2">
+                <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
+            </div>
             <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center"></div>
         </div>
 
         <div id="personalSection" class="hidden space-y-2">
-            <h2 class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
-                <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
-                <span>🍃 我的專屬禪定時光 (左右滑動)</span>
+            <h2 class="font-bold text-sky-200 text-sm ml-2 flex justify-between items-center">
+                <span class="flex items-center gap-2">
+                    <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
+                    <span id="selectedDateText">🍃 專屬紀錄</span>
+                </span>
+                <button onclick="hidePersonal()" class="text-[10px] text-sky-500 px-2">關閉 ✕</button>
             </h2>
             <div id="personalSlider" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x px-1"></div>
         </div>
 
         <div class="glass-card p-6 space-y-4">
-            <h2 class="font-bold text-sky-200 text-sm border-b border-sky-800/50 pb-2">🧘 禪定打卡</h2>
+            <h2 class="font-bold text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">
+                <span>🧘 進行禪定打卡</span>
+            </h2>
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[10px] text-sky-400">調頻時空 (可補打卡)</label>
+                    <label class="text-[10px] text-sky-400 ml-1">調頻日期</label>
                     <input type="date" id="recordDate" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] text-sky-400">分鐘數</label>
-                    <input type="number" id="minutes" oninput="validateForm()" placeholder="至少10分鐘" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
+                    <label class="text-[10px] text-sky-400 ml-1">分鐘 (需滿10)</label>
+                    <input type="number" id="minutes" oninput="validateForm()" placeholder="分鐘" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
             </div>
-            <textarea id="note" oninput="validateForm()" placeholder="記錄此刻的禪定心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none resize-none"></textarea>
+            <textarea id="note" oninput="validateForm()" placeholder="此刻的心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none resize-none"></textarea>
             
-            <button id="saveBtn" onclick="triggerSummon()" disabled class="w-full btn-gradient btn-disabled py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-95">
+            <button id="saveBtn" onclick="triggerSummon()" disabled class="w-full btn-gradient btn-disabled py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2">
                 <span>匯聚能量 ‧ 召喚精靈</span>
                 <span id="btnIcon">🔒</span>
             </button>
@@ -115,7 +113,14 @@
 
         <div class="glass-card p-5">
             <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2">📖 夥伴禪定手札</h2>
-            <div id="historyLogs" class="space-y-4 max-h-80 overflow-y-auto pr-2"></div>
+            <div id="historyLogs" class="space-y-4 max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+    </div>
+
+    <div id="loginOverlay" class="fixed inset-0 z-[500] flex items-center justify-center bg-black/95 px-6 hidden">
+        <div class="glass-card p-8 w-full max-w-sm text-center">
+            <h2 class="text-2xl font-black text-sky-300 mb-6 tracking-widest">🧞 禪定精靈</h2>
+            <button onclick="handleGoogleLogin()" class="w-full bg-white text-black py-4 rounded-2xl font-bold">Google 帳號登入</button>
         </div>
     </div>
 
@@ -129,7 +134,22 @@
             { name: '數息小童', desc: '專注呼吸的靈體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
             { name: '不倒翁念頭', desc: '念頭來去，我自歸中', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
             { name: '止語貝殼', desc: '收藏著宇宙的寂靜', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
-            { name: '公案青蛙', desc: '跳進水裡的頓悟聲', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' }
+            { name: '公案青蛙', desc: '跳進水裡的頓悟聲', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { name: '定心石怪', desc: '如如不動，堅若磐石', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { name: '香燃煙靈', desc: '隨風而逝的無常', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { name: '木魚響響', desc: '清醒的節奏精靈', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { name: '蓮座花精', desc: '純淨的心靈花朵', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { name: '虛空水母', desc: '漂浮在空性之海', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' },
+            { name: '觀照之眼', desc: '洞察真實的智慧', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
+            { name: '慈悲雲朵', desc: '溫柔覆蓋大地的善意', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
+            { name: '脈輪光球', desc: '旋轉的能量核心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
+            { name: '般若卷軸', desc: '記載奧秘的古老靈魂', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
+            { name: '須彌山獸', desc: '世界的中心，穩重如山', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { name: '金剛鑽狼', desc: '斬斷煩惱的銳利心性', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { name: '涅槃鳳凰', desc: '超越生死的終極自在', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { name: '真如星靈', desc: '接受當下的原本樣貌', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { name: '頓悟雷光', desc: '劃破無明的覺醒瞬間', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { name: '萬法歸一', desc: '宇宙萬物，本自一體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
         ];
 
         let currentUser = "";
@@ -140,21 +160,21 @@
             const { data: { session } } = await client.auth.getSession();
             updateAuth(session);
             client.auth.onAuthStateChange((_e, session) => updateAuth(session));
-            initParticleCanvas();
+            initParticles();
         }
 
         function updateAuth(session) {
             const overlay = document.getElementById('loginOverlay');
             if (session) {
                 overlay.classList.add('hidden');
-                currentUser = session.user.user_metadata.full_name || "修行者";
+                currentUser = session.user.user_metadata.full_name || "禪定勇者";
                 document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
                 fetchData();
             } else { overlay.classList.remove('hidden'); }
         }
 
         async function handleGoogleLogin() { await client.auth.signInWithOAuth({ provider: 'google' }); }
-        function logout() { if(confirm('要暫時登出嗎？')) client.auth.signOut().then(()=>location.reload()); }
+        function logout() { if(confirm('確定要登出嗎？')) client.auth.signOut().then(()=>location.reload()); }
 
         async function fetchData() {
             const { data } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
@@ -164,37 +184,25 @@
 
         function renderAll() {
             renderCalendar();
-            renderPersonalSlider();
             renderInventory();
             renderLeaderboard();
             renderLogs();
             updateStreak();
         }
 
-        function validateForm() {
-            const mins = parseInt(document.getElementById('minutes').value) || 0;
-            const note = document.getElementById('note').value.trim();
-            const btn = document.getElementById('saveBtn');
-            const icon = document.getElementById('btnIcon');
-            if (mins >= 10 && note.length > 0) {
-                btn.disabled = false; btn.classList.remove('btn-disabled'); icon.innerText = '💠';
-            } else {
-                btn.disabled = true; btn.classList.add('btn-disabled'); icon.innerText = '🔒';
-            }
-        }
-
-        // 召喚與爆炸邏輯
+        // --- 召喚與精靈視窗修正 ---
         function triggerSummon() {
             const overlay = document.getElementById('summoningOverlay');
+            const ball = document.getElementById('mainBall');
             overlay.classList.remove('hidden');
-            document.getElementById('mainBall').classList.add('crystal-active');
+            ball.classList.add('crystal-active');
             
             setTimeout(() => {
                 createExplosion(window.innerWidth/2, window.innerHeight/2);
                 overlay.classList.add('hidden');
-                document.getElementById('mainBall').classList.remove('crystal-active');
-                saveRecord();
-            }, 1500);
+                ball.classList.remove('crystal-active');
+                saveRecord(); 
+            }, 1200);
         }
 
         async function saveRecord() {
@@ -205,15 +213,18 @@
             const finalNote = `${note} {{Spirit:${spirit.name}}}`;
 
             const { error } = await client.from('meditation_logs').insert([{ 
-                username: currentUser, minutes: mins, note: finalNote, created_at: new Date(date).toISOString() 
+                username: currentUser, minutes: parseInt(mins), note: finalNote, created_at: new Date(date).toISOString() 
             }]);
 
             if (!error) {
+                // 成功儲存後立即彈出視窗
                 document.getElementById('gachaImg').src = spirit.img;
                 document.getElementById('gachaName').innerText = spirit.name;
                 document.getElementById('gachaDesc').innerText = spirit.desc;
                 document.getElementById('gachaModal').classList.remove('hidden');
-                fetchData();
+                await fetchData();
+            } else {
+                alert("能量傳輸失敗，請稍後再試");
             }
         }
 
@@ -224,31 +235,64 @@
             validateForm();
         }
 
-        // 渲染功能
+        // --- 月曆互動：點擊出現專屬紀錄 ---
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid'); grid.innerHTML = "";
             const now = new Date();
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-            const myLogs = logsData.filter(l => l.username === currentUser).map(l => new Date(l.created_at).getDate());
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+            
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+
+            const myLogs = logsData.filter(l => l.username === currentUser);
             for (let i = 1; i <= daysInMonth; i++) {
-                const filled = myLogs.includes(i);
-                grid.innerHTML += `<div><div class="text-[8px] ${filled ? 'text-gold font-bold' : 'text-sky-700'}">${i}</div><div class="calendar-dot ${filled ? 'dot-filled' : 'dot-empty'}"></div></div>`;
+                const hasRecord = myLogs.some(l => new Date(l.created_at).getDate() === i);
+                grid.innerHTML += `
+                    <div onclick="showDayDetail(${i})" class="cursor-pointer py-1.5 rounded-lg active:bg-sky-700/50">
+                        <div class="text-[9px] ${hasRecord ? 'text-gold font-bold' : 'text-sky-800'}">${i}</div>
+                        <div class="calendar-dot ${hasRecord ? 'dot-filled' : 'dot-empty'}"></div>
+                    </div>`;
             }
         }
 
-        function renderPersonalSlider() {
-            const myLogs = logsData.filter(l => l.username === currentUser);
+        function showDayDetail(day) {
+            const filtered = logsData.filter(l => {
+                const d = new Date(l.created_at);
+                return l.username === currentUser && d.getDate() === day;
+            });
+            
             const section = document.getElementById('personalSection');
             const slider = document.getElementById('personalSlider');
-            if (myLogs.length) {
+            const dateText = document.getElementById('selectedDateText');
+
+            if (filtered.length > 0) {
                 section.classList.remove('hidden');
-                slider.innerHTML = myLogs.map(l => {
+                dateText.innerText = `🍃 ${day}日 的專屬禪定時光`;
+                slider.innerHTML = filtered.map(l => {
                     const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
-                    return `<div class="snap-center shrink-0 w-60 glass-card p-4 border border-sky-700/50">
-                        <div class="text-gold font-bold text-[10px] mb-1">${new Date(l.created_at).toLocaleDateString()}</div>
-                        <div class="text-[11px] text-sky-200 italic line-clamp-3">"${cleanNote}"</div>
+                    return `<div class="snap-center shrink-0 w-64 glass-card p-4 border border-sky-600/30">
+                        <div class="text-sky-400 font-bold text-[10px] mb-2">調頻時長: ${l.minutes} 分鐘</div>
+                        <div class="text-[12px] text-sky-100 leading-relaxed italic">"${cleanNote}"</div>
                     </div>`;
                 }).join('');
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        function hidePersonal() { document.getElementById('personalSection').classList.add('hidden'); }
+
+        // --- 原有功能維持 ---
+        function validateForm() {
+            const mins = parseInt(document.getElementById('minutes').value) || 0;
+            const note = document.getElementById('note').value.trim();
+            const btn = document.getElementById('saveBtn');
+            const icon = document.getElementById('btnIcon');
+            if (mins >= 10 && note.length > 0) {
+                btn.disabled = false; btn.classList.remove('btn-disabled'); icon.innerText = '💠';
+            } else {
+                btn.disabled = true; btn.classList.add('btn-disabled'); icon.innerText = '🔒';
             }
         }
 
@@ -262,7 +306,7 @@
                 const s = spiritPool.find(p => p.name === name) || {img:''};
                 return `<div class="bg-sky-900/40 p-2 rounded-xl text-center border border-sky-700/30">
                     <img src="${s.img}" class="w-8 h-8 mx-auto object-contain">
-                    <div class="text-[8px] font-bold text-sky-200 mt-1">${name} x${counts[name]}</div>
+                    <div class="text-[8px] text-sky-200 mt-1">${name} x${counts[name]}</div>
                 </div>`;
             }).join('');
         }
@@ -272,21 +316,21 @@
             logsData.forEach(l => stats[l.username] = (stats[l.username] || 0) + l.minutes);
             const sorted = Object.entries(stats).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 5).map(([n, m], i) => 
-                `<div class="flex justify-between p-2.5 ${n===currentUser?'bg-sky-800/60 border border-gold/30':'bg-sky-900/30'} rounded-xl text-xs">
-                    <span>${i+1}. ${n}</span><span class="text-sky-400 font-mono">${m} min</span>
+                `<div class="flex justify-between p-3 ${n===currentUser?'bg-sky-800/60 border border-gold/30':'bg-sky-900/30'} rounded-xl text-xs">
+                    <span>${i+1}. ${n}</span><span class="font-mono text-sky-400">${m} min</span>
                 </div>`
             ).join('');
         }
 
         function renderLogs() {
             document.getElementById('historyLogs').innerHTML = logsData.map(l => {
-                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, ''); // 隱藏精靈資訊
+                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
                 return `<div class="border-b border-sky-800/30 pb-3 last:border-0">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-xs font-bold text-sky-200">${l.username}</span>
-                        <span class="text-[9px] text-sky-500">${new Date(l.created_at).toLocaleDateString()} · ${l.minutes}m</span>
+                        <span class="text-[9px] text-sky-500">${new Date(l.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div class="text-[11px] text-sky-100/70 leading-relaxed bg-sky-900/20 p-2 rounded-lg italic">"${cleanNote}"</div>
+                    <div class="text-[11px] text-sky-100/60 italic leading-snug">"${cleanNote}"</div>
                 </div>`;
             }).join('');
         }
@@ -297,12 +341,12 @@
             let streak = 0; let check = new Date();
             if (dates[0] !== check.toDateString()) check.setDate(check.getDate() - 1);
             while (dates.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
-            document.getElementById('streakDisplay').innerText = `🔥 連續調頻 ${streak} 天 | 能量即時連動中`;
+            document.getElementById('streakDisplay').innerText = `🔥 已連續禪定 ${streak} 天 | 能量充盈`;
         }
 
         // --- 粒子特效 Canvas ---
         let canvas, ctx, particles = [];
-        function initParticleCanvas() {
+        function initParticles() {
             canvas = document.getElementById('particleCanvas');
             ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth; canvas.height = window.innerHeight;
@@ -310,23 +354,23 @@
         class Particle {
             constructor(x, y) {
                 this.x = x; this.y = y;
-                this.size = Math.random() * 4 + 1;
-                this.speedX = (Math.random() - 0.5) * 12;
-                this.speedY = (Math.random() - 0.5) * 12;
-                this.color = '#fbbf24'; this.opacity = 1;
+                this.size = Math.random()*5+2;
+                this.speedX = (Math.random()-0.5)*15;
+                this.speedY = (Math.random()-0.5)*15;
+                this.opacity = 1;
             }
-            update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.02; }
-            draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); }
+            update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.025; }
+            draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); }
         }
         function createExplosion(x, y) {
-            for(let i=0; i<40; i++) particles.push(new Particle(x, y));
-            animate();
+            for(let i=0; i<50; i++) particles.push(new Particle(x, y));
+            animateParticles();
         }
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        function animateParticles() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
             particles = particles.filter(p => p.opacity > 0);
             particles.forEach(p => { p.update(); p.draw(); });
-            if (particles.length) requestAnimationFrame(animate);
+            if(particles.length) requestAnimationFrame(animateParticles);
         }
 
         init();
