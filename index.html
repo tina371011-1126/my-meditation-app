@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定精靈 - 粒子召喚版</title>
+    <title>禪定精靈 - 水晶球召喚版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -13,58 +13,88 @@
                     colors: {
                         zen: { 900: '#0c4a6e', 950: '#082f49' },
                         gold: { DEFAULT: '#fbbf24', glow: '#fcd34d' }
+                    },
+                    animation: {
+                        'shake': 'shake 0.5s cubic-bezier(.36,.07,.19,.97) infinite',
+                        'glow': 'glow 2s ease-in-out infinite',
                     }
                 }
             }
         }
     </script>
     <style>
-        body { background: linear-gradient(to bottom, #082f49, #0f172a); color: #e0f2fe; font-family: 'PingFang TC', sans-serif; overflow-x: hidden; }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px #7dd3fc, inset 0 0 20px #7dd3fc; }
+            50% { box-shadow: 0 0 50px #fbbf24, inset 0 0 30px #fbbf24; }
+        }
+        body { background: linear-gradient(to bottom, #082f49, #0f172a); color: #e0f2fe; font-family: 'PingFang TC', sans-serif; }
         .glass-card { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-radius: 24px; border: 1px solid rgba(56, 189, 248, 0.2); }
         .calendar-dot { width: 8px; height: 8px; border-radius: 50%; margin: 2px auto; }
         .dot-filled { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
         .dot-empty { border: 1px solid rgba(56, 189, 248, 0.4); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); transition: all 0.3s; }
-        .btn-disabled { background: #334155 !important; opacity: 0.5; cursor: not-allowed; transform: scale(1) !important; }
+        .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); }
+        .btn-disabled { background: #334155 !important; opacity: 0.5; cursor: not-allowed; }
 
-        /* 水晶球震動與聚能動畫 */
-        @keyframes super-shake {
-            0% { transform: translate(0,0) scale(1); }
-            20% { transform: translate(-5px, 5px) scale(1.05); }
-            40% { transform: translate(5px, -5px) scale(1.1); }
-            60% { transform: translate(-8px, -8px) scale(1.15); }
-            80% { transform: translate(8px, 8px) scale(1.2); }
-            100% { transform: translate(0,0) scale(1.3); opacity: 0; }
+        /* 水晶球樣式 */
+        .crystal-ball {
+            width: 150px; height: 150px;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2), rgba(0,0,0,0));
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
         }
-        .crystal-active { animation: super-shake 1.5s forwards; }
-
-        /* 粒子粒子容器 */
-        #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
+        .ball-inner {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle, #7dd3fc 0%, transparent 70%);
+            border-radius: 50%; opacity: 0.6;
+        }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
 
-    <canvas id="particleCanvas"></canvas>
-
-    <div id="summoningOverlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 backdrop-blur-2xl hidden">
-        <div id="ballContainer" class="relative">
-            <div id="mainBall" class="w-32 h-32 rounded-full bg-gradient-to-br from-sky-300 to-blue-600 shadow-[0_0_50px_#3b82f6] flex items-center justify-center relative overflow-hidden">
-                <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
-                <span class="text-5xl">🔮</span>
-            </div>
-            <div class="absolute -inset-4 border-2 border-gold/30 rounded-full animate-spin-slow"></div>
+    <div id="summoningOverlay" class="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/90 backdrop-blur-xl hidden">
+        <div class="crystal-ball animate-shake animate-glow">
+            <div class="ball-inner animate-pulse"></div>
+            <span class="text-4xl">🔮</span>
         </div>
-        <p id="summonText" class="mt-12 text-gold font-bold tracking-[0.4em] animate-pulse text-lg">凝聚禪定能量...</p>
+        <p class="mt-8 text-gold font-bold tracking-[0.2em] animate-pulse">能量共鳴中...</p>
+    </div>
+
+    <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md px-6 hidden">
+        <div class="glass-card p-8 w-full max-w-sm text-center">
+            <h2 class="text-3xl font-black text-sky-300 mb-4">🧞 禪定精靈顯現</h2>
+            <button onclick="handleGoogleLogin()" class="w-full bg-white text-zen-950 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+                Google 帳號連結
+            </button>
+        </div>
+    </div>
+
+    <div id="gachaModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden px-6">
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm"></div>
+        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold">
+            <h2 class="text-gold font-bold mb-4 text-xl">✨ 精靈顯現</h2>
+            <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain">
+            <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
+            <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic"></p>
+            <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold">收入圖鑑</button>
+        </div>
     </div>
 
     <div class="max-w-md mx-auto space-y-6 pt-2">
         <header class="flex justify-between items-center py-2 px-1">
             <div>
                 <h1 class="text-xl font-black text-sky-200 tracking-wider">禪定精靈調頻</h1>
-                <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">偵測能量中...</p>
+                <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">讀取能量中...</p>
             </div>
-            <img id="userAvatar" src="https://www.svgrepo.com/show/384674/account-avatar-profile-user-11.svg" class="w-10 h-10 rounded-full border-2 border-sky-500/50">
+            <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-500/50 cursor-pointer" onclick="logout()">
         </header>
 
         <div class="glass-card p-5">
@@ -73,29 +103,29 @@
         </div>
 
         <div id="personalSection" class="hidden space-y-2">
-            <h2 class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
+            <h2 id="personalTitle" class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
                 <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
-                <span>🍃 我的專屬禪定時光</span>
+                <span id="personalTitleText">🍃 我的專屬禪定時光 (左右滑動)</span>
             </h2>
             <div id="personalSlider" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x px-1"></div>
         </div>
 
         <div class="glass-card p-6 space-y-4">
-            <h2 class="font-bold text-sky-200 text-sm border-b border-sky-800/50 pb-2">🧘 禪定打卡</h2>
+            <h2 class="font-bold text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">🧘 禪定打卡</h2>
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[10px] text-sky-400">調頻時空 (可補打卡)</label>
+                    <label class="text-[10px] text-sky-400 ml-1">調頻時空 (可補打卡)</label>
                     <input type="date" id="recordDate" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] text-sky-400">分鐘數</label>
+                    <label class="text-[10px] text-sky-400 ml-1">分鐘數</label>
                     <input type="number" id="minutes" oninput="validateForm()" placeholder="至少10分鐘" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
             </div>
             <textarea id="note" oninput="validateForm()" placeholder="記錄此刻的禪定心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none resize-none"></textarea>
             
-            <button id="saveBtn" onclick="triggerSummon()" disabled class="w-full btn-gradient btn-disabled py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2 active:scale-95">
-                <span>匯聚能量 ‧ 召喚精靈</span>
+            <button id="saveBtn" onclick="saveRecord()" disabled class="w-full btn-gradient btn-disabled py-3.5 rounded-xl font-bold text-white shadow-lg transition-all flex items-center justify-center gap-2">
+                <span>匯聚禪定能量 ‧ 召喚精靈</span>
                 <span id="btnIcon">🔒</span>
             </button>
         </div>
@@ -107,94 +137,18 @@
             </h2>
             <div id="spiritGrid" class="grid grid-cols-4 gap-3"></div>
         </div>
-    </div>
-
-    <div id="gachaModal" class="fixed inset-0 z-[300] flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
-        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-[0_0_30px_rgba(251,191,36,0.3)]">
-            <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 獲得新精靈 ✨</h2>
-            <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
-            <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
-            <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic"></p>
-            <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold">收入圖鑑</button>
+        
+        <div class="glass-card p-5">
+            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2">🏆 能量排行</h2>
+            <div id="leaderboard" class="space-y-2 text-xs"></div>
         </div>
     </div>
 
     <script>
-        // --- 粒子效果邏輯 ---
-        const canvas = document.getElementById('particleCanvas');
-        const ctx = canvas.getContext('2d');
-        let particles = [];
+        const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function initCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', initCanvas);
-        initCanvas();
-
-        class Particle {
-            constructor(x, y) {
-                this.x = x; this.y = y;
-                this.size = Math.random() * 5 + 2;
-                this.speedX = (Math.random() - 0.5) * 15;
-                this.speedY = (Math.random() - 0.5) * 15;
-                this.color = `hsl(${Math.random() * 40 + 30}, 100%, 70%)`; // 金色系
-                this.opacity = 1;
-            }
-            update() {
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.opacity -= 0.02;
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.globalAlpha = this.opacity;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-
-        function createExplosion(x, y) {
-            for (let i = 0; i < 50; i++) {
-                particles.push(new Particle(x, y));
-            }
-            animateParticles();
-        }
-
-        function animateParticles() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles = particles.filter(p => p.opacity > 0);
-            particles.forEach(p => { p.update(); p.draw(); });
-            if (particles.length > 0) requestAnimationFrame(animateParticles);
-        }
-
-        // --- 召喚流程邏輯 ---
-        function triggerSummon() {
-            const overlay = document.getElementById('summoningOverlay');
-            const ball = document.getElementById('mainBall');
-            const text = document.getElementById('summonText');
-            
-            overlay.classList.remove('hidden');
-            
-            // 階段一：聚能
-            setTimeout(() => {
-                ball.classList.add('crystal-active');
-                text.innerText = "能量達到臨界點！";
-                text.classList.add('text-white');
-            }, 500);
-
-            // 階段二：爆炸
-            setTimeout(() => {
-                createExplosion(window.innerWidth / 2, window.innerHeight / 2);
-                overlay.classList.add('hidden');
-                ball.classList.remove('crystal-active');
-                saveRecord(); // 執行原本的儲存與顯示彈窗邏輯
-            }, 2000);
-        }
-
-        // --- 原有邏輯 (簡化示意) ---
         const spiritPool = [
             { name: '初心苔蘚', desc: '柔軟且謙卑的初發心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
             { name: '數息小童', desc: '專注呼吸的靈體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
@@ -218,6 +172,59 @@
             { name: '萬法歸一', desc: '宇宙萬物，本自一體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
         ];
 
+        let currentUser = "";
+        let logsData = [];
+
+        async function init() {
+            document.getElementById('recordDate').valueAsDate = new Date();
+            const { data: { session } } = await client.auth.getSession();
+            updateAuth(session);
+            client.auth.onAuthStateChange((_e, session) => updateAuth(session));
+        }
+
+        function updateAuth(session) {
+            const overlay = document.getElementById('loginOverlay');
+            if (session) {
+                overlay.classList.add('hidden');
+                currentUser = session.user.user_metadata.full_name || "修行者";
+                document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
+                fetchData();
+            } else { overlay.classList.remove('hidden'); }
+        }
+
+        async function handleGoogleLogin() { await client.auth.signInWithOAuth({ provider: 'google' }); }
+        function logout() { if(confirm('要登出嗎？')) client.auth.signOut().then(() => location.reload()); }
+
+        async function fetchData() {
+            const { data } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
+            logsData = data || [];
+            renderAll();
+        }
+
+        function renderAll() {
+            renderCalendar();
+            renderPersonalSlider();
+            renderInventory();
+            renderLeaderboard();
+            updateStreak();
+        }
+
+        // 4. 即時變換連續天數
+        function updateStreak() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const streakDisplay = document.getElementById('streakDisplay');
+            if (!myLogs.length) { streakDisplay.innerText = "🔮 準備開始你的第一次禪定"; return; }
+            
+            const dates = [...new Set(myLogs.map(l => new Date(l.created_at).toDateString()))];
+            let streak = 0;
+            let check = new Date();
+            if (dates[0] !== check.toDateString()) check.setDate(check.getDate() - 1);
+            while (dates.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
+            
+            streakDisplay.innerText = streak > 0 ? `🔥 連續調頻 ${streak} 天 | 能量狀態極佳！` : "⚡ 能量待續，今天也來禪定吧！";
+        }
+
+        // 3. 送出按鈕防呆
         function validateForm() {
             const mins = parseInt(document.getElementById('minutes').value) || 0;
             const note = document.getElementById('note').value.trim();
@@ -230,33 +237,88 @@
             }
         }
 
-        function saveRecord() {
-            // 這裡模擬 Supabase 儲存成功後顯示結果
+        // 儲存與召喚動畫
+        async function saveRecord() {
+            const mins = document.getElementById('minutes').value;
+            const note = document.getElementById('note').value;
+            const date = document.getElementById('recordDate').value;
+            
+            // 顯示水晶球召喚層
+            const summonLayer = document.getElementById('summoningOverlay');
+            summonLayer.classList.remove('hidden');
+
             const wonSpirit = spiritPool[Math.floor(Math.random() * spiritPool.length)];
-            document.getElementById('gachaImg').src = wonSpirit.img;
-            document.getElementById('gachaName').innerText = wonSpirit.name;
-            document.getElementById('gachaDesc').innerText = wonSpirit.desc;
-            document.getElementById('gachaModal').classList.remove('hidden');
-            updateUI(); // 重新渲染月曆與天數
+            const finalNote = `${note} {{Spirit:${wonSpirit.name}}}`;
+
+            const { error } = await client.from('meditation_logs').insert([{ 
+                username: currentUser, minutes: mins, note: finalNote, created_at: new Date(date).toISOString() 
+            }]);
+
+            // 延遲兩秒讓水晶球震動一會兒再顯示結果
+            setTimeout(() => {
+                summonLayer.classList.add('hidden');
+                if (!error) {
+                    document.getElementById('gachaImg').src = wonSpirit.img;
+                    document.getElementById('gachaName').innerText = wonSpirit.name;
+                    document.getElementById('gachaDesc').innerText = wonSpirit.desc;
+                    document.getElementById('gachaModal').classList.remove('hidden');
+                    document.getElementById('minutes').value = '';
+                    document.getElementById('note').value = '';
+                    validateForm();
+                    fetchData();
+                }
+            }, 2000);
         }
 
-        function closeGacha() {
-            document.getElementById('gachaModal').classList.add('hidden');
-            // 清空輸入
-            document.getElementById('minutes').value = '';
-            document.getElementById('note').value = '';
-            validateForm();
+        function closeGacha() { document.getElementById('gachaModal').classList.add('hidden'); }
+
+        // 月曆與個人滑動區 (原本邏輯)
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            grid.innerHTML = "";
+            const now = new Date();
+            const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const myLogs = logsData.filter(l => l.username === currentUser).map(l => new Date(l.created_at).getDate());
+            for (let i = 1; i <= daysInMonth; i++) {
+                const filled = myLogs.includes(i);
+                grid.innerHTML += `<div><div class="text-[8px] ${filled ? 'text-gold font-bold' : 'text-sky-700'}">${i}</div><div class="calendar-dot ${filled ? 'dot-filled' : 'dot-empty'}"></div></div>`;
+            }
         }
 
-        function updateUI() {
-            // 這裡放您原本的 renderCalendar, updateStreak 等函數
-            document.getElementById('streakDisplay').innerText = "🔥 連續調頻 3 天 | 能量狀態極佳！"; 
-            document.getElementById('calendarMonth').innerText = "2024年 5月 紀錄月曆";
+        function renderPersonalSlider() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const slider = document.getElementById('personalSlider');
+            if (myLogs.length) {
+                document.getElementById('personalSection').classList.remove('hidden');
+                slider.innerHTML = myLogs.map(l => {
+                    const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                    return `<div class="snap-center shrink-0 w-60 glass-card p-4 border border-sky-700/50">
+                        <div class="text-gold font-bold text-[10px] mb-1">${new Date(l.created_at).toLocaleDateString()}</div>
+                        <div class="text-[11px] text-sky-200 line-clamp-2 italic">"${cleanNote}"</div>
+                    </div>`;
+                }).join('');
+            }
         }
 
-        // 初始化
-        document.getElementById('recordDate').valueAsDate = new Date();
-        updateUI();
+        function renderInventory() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const counts = {};
+            myLogs.forEach(l => { const m = l.note.match(/{{Spirit:(.*?)}}/); if(m) counts[m[1]] = (counts[m[1]]||0)+1; });
+            document.getElementById('spiritGrid').innerHTML = Object.keys(counts).map(name => {
+                return `<div class="bg-sky-900/30 p-2 rounded-xl text-center"><div class="text-lg">✨</div><div class="text-[9px] font-bold text-sky-200">${name} x${counts[name]}</div></div>`;
+            }).join('');
+        }
+
+        function renderLeaderboard() {
+            const stats = {};
+            logsData.forEach(l => stats[l.username] = (stats[l.username] || 0) + l.minutes);
+            const sorted = Object.entries(stats).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 5).map(([n, m], i) => 
+                `<div class="flex justify-between p-2 ${n===currentUser?'bg-sky-800':'bg-sky-900/20'} rounded-lg"><span>${i+1}. ${n}</span><span>${m} min</span></div>`
+            ).join('');
+        }
+
+        init();
     </script>
 </body>
 </html>
