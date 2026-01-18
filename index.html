@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定精靈 - 功能優化版</title>
+    <title>禪定精靈 - 夥伴連結版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -18,6 +18,8 @@
         @keyframes crystal-summon { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.2) rotate(10deg); filter: brightness(1.5); } 100% { transform: scale(1.5); opacity: 0; } }
         .crystal-active { animation: crystal-summon 1.2s forwards ease-in; }
         #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
+        /* 日期選擇器反灰樣式優化 */
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
@@ -32,7 +34,7 @@
 
     <div id="gachaModal" class="fixed inset-0 z-[300] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl">
+        <div class="relative glass-card p-8 w-full max-sm text-center border-2 border-gold shadow-2xl">
             <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 禪定精靈現身 ✨</h2>
             <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]">
             <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
@@ -48,7 +50,6 @@
                 <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">連結能量中...</p>
             </div>
             <div class="flex items-center gap-3">
-                <button onclick="shareToLine()" class="text-[10px] bg-green-600/80 text-white px-2 py-1 rounded-full border border-green-400">LINE 提醒</button>
                 <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-500/50 cursor-pointer" onclick="logout()">
             </div>
         </header>
@@ -153,7 +154,13 @@
         let logsData = [];
 
         async function init() {
-            document.getElementById('recordDate').valueAsDate = new Date();
+            // 設定今日日期與最大日期限制（明天以後反灰）
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0];
+            const dateInput = document.getElementById('recordDate');
+            dateInput.value = dateStr;
+            dateInput.max = dateStr; 
+
             const { data: { session } } = await client.auth.getSession();
             updateAuth(session);
             client.auth.onAuthStateChange((_e, session) => updateAuth(session));
@@ -166,6 +173,10 @@
                 overlay.classList.add('hidden');
                 currentUser = session.user.user_metadata.full_name || "禪定勇者";
                 document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
+                const urlParams = new URLSearchParams(window.location.search);
+                if(urlParams.get('remind') === currentUser) {
+                    setTimeout(() => alert(`🔔 夥伴呼喚：${currentUser}，今日能量尚未對齊，快來禪定吧！`), 1000);
+                }
                 fetchData();
             } else { overlay.classList.remove('hidden'); }
         }
@@ -223,7 +234,6 @@
             validateForm();
         }
 
-        // 修正：圖鑑只顯示已獲得
         function renderInventory() {
             const myLogs = logsData.filter(l => l.username === currentUser);
             const counts = {};
@@ -238,7 +248,6 @@
                 </div>`).join('');
         }
 
-        // 修正：月曆點擊為空時顯示「偷懶」
         function renderCalendar() {
             const grid = document.getElementById('calendarGrid'); grid.innerHTML = "";
             const now = new Date();
@@ -256,7 +265,6 @@
             }
         }
 
-        // 修正：增加刪修功能
         function showDayDetail(day, hasRecord) {
             if (!hasRecord) { alert("這天偷懶囉！😴"); return; }
             const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
@@ -303,7 +311,7 @@
             if (!error) {
                 alert("能量修正成功！");
                 document.getElementById('saveBtn').setAttribute('onclick', "triggerSummon()");
-                document.getElementById('saveBtn').innerHTML = "<span>匯聚禪定能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
+                document.getElementById('saveBtn').innerHTML = "<span>匯聚能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 hidePersonal();
@@ -311,12 +319,13 @@
             }
         }
 
-        function shareToLine() {
-            const text = encodeURIComponent(`🧘 禪定夥伴提醒：今日尚未禪定！\n快回來與禪定精靈一起提升能量吧！✨`);
+        function remindPartner(targetName) {
+            const baseUrl = window.location.href.split('?')[0];
+            const remindUrl = `${baseUrl}?remind=${encodeURIComponent(targetName)}`;
+            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來對齊能量吧！✨\n點擊進入：${remindUrl}`);
             window.open(`https://line.me/R/msg/text/?${text}`);
         }
 
-        // 維持其他不變部分...
         function hidePersonal() { document.getElementById('personalSection').classList.add('hidden'); }
         function validateForm() {
             const mins = parseInt(document.getElementById('minutes').value) || 0;
@@ -326,16 +335,22 @@
             btn.classList.toggle('btn-disabled', btn.disabled);
             document.getElementById('btnIcon').innerText = btn.disabled ? '🔒' : '💠';
         }
+
         function renderLeaderboard() {
             const stats = {};
             logsData.forEach(l => stats[l.username] = (stats[l.username] || 0) + l.minutes);
             const sorted = Object.entries(stats).sort((a,b) => b[1]-a[1]);
             document.getElementById('leaderboard').innerHTML = sorted.slice(0, 5).map(([n, m], i) => 
-                `<div class="flex justify-between p-3 ${n===currentUser?'bg-sky-800/60 border border-gold/30':'bg-sky-900/30'} rounded-xl text-xs">
-                    <span>${i+1}. ${n}</span><span class="font-mono text-sky-400">${m} min</span>
+                `<div class="flex justify-between items-center p-3 ${n===currentUser?'bg-sky-800/60 border border-gold/30':'bg-sky-900/30'} rounded-xl text-xs">
+                    <div class="flex items-center gap-2">
+                        <span>${i+1}. ${n}</span>
+                        ${n !== currentUser ? `<button onclick="remindPartner('${n}')" class="text-[9px] bg-green-600 px-1.5 py-0.5 rounded text-white opacity-80">叮嚀</button>` : ''}
+                    </div>
+                    <span class="font-mono text-sky-400">${m} min</span>
                 </div>`
             ).join('');
         }
+
         function renderLogs() {
             document.getElementById('historyLogs').innerHTML = logsData.map(l => {
                 const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
@@ -362,11 +377,7 @@
         }
         let canvas, ctx, particles = [];
         function initParticles() { canvas = document.getElementById('particleCanvas'); ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        class Particle {
-            constructor(x, y) { this.x = x; this.y = y; this.size = Math.random()*5+2; this.speedX = (Math.random()-0.5)*15; this.speedY = (Math.random()-0.5)*15; this.opacity = 1; }
-            update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.025; }
-            draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); }
-        }
+        class Particle { constructor(x, y) { this.x = x; this.y = y; this.size = Math.random()*5+2; this.speedX = (Math.random()-0.5)*15; this.speedY = (Math.random()-0.5)*15; this.opacity = 1; } update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.025; } draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); } }
         function createExplosion(x, y) { for(let i=0; i<50; i++) particles.push(new Particle(x, y)); animateParticles(); }
         function animateParticles() { ctx.clearRect(0,0,canvas.width,canvas.height); particles = particles.filter(p => p.opacity > 0); particles.forEach(p => { p.update(); p.draw(); }); if(particles.length) requestAnimationFrame(animateParticles); }
         init();
