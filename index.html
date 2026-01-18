@@ -79,7 +79,7 @@
             <div class="grid grid-cols-12 gap-6">
                 <div class="col-span-7 space-y-1">
                     <label class="text-[10px] text-sky-400 ml-1">日期</label>
-                    <input type="date" id="recordDate" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
+                    <input type="date" id="recordDate" onchange="validateForm()" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
                 <div class="col-span-5 space-y-1">
                     <label class="text-[10px] text-sky-400 ml-1">分鐘</label>
@@ -153,11 +153,10 @@
         let logsData = [];
 
         async function init() {
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
+            const todayStr = new Date().toLocaleDateString('en-CA');
             const dateInput = document.getElementById('recordDate');
-            dateInput.value = dateStr;
-            dateInput.max = dateStr; 
+            dateInput.value = todayStr;
+            dateInput.max = todayStr; // 卡控：明天以後日期反灰
 
             const { data: { session } } = await client.auth.getSession();
             updateAuth(session);
@@ -189,7 +188,13 @@
             renderAll();
         }
 
-        function renderAll() { renderCalendar(); renderInventory(); renderLeaderboard(); renderLogs(); updateStreak(); }
+        function renderAll() { 
+            renderCalendar(); 
+            renderInventory(); 
+            renderLeaderboard(); 
+            renderLogs(); 
+            updateStreak(); 
+        }
 
         function triggerSummon() {
             const overlay = document.getElementById('summoningOverlay');
@@ -212,8 +217,13 @@
             const timestamp = new Date(dateInput);
             timestamp.setHours(new Date().getHours(), new Date().getMinutes());
 
+            // 修正傳輸失敗：補上 coins 欄位
             const { error } = await client.from('meditation_logs').insert([{ 
-                username: currentUser, minutes: parseInt(mins), note: finalNote, created_at: timestamp.toISOString() 
+                username: currentUser, 
+                minutes: parseInt(mins), 
+                note: finalNote, 
+                created_at: timestamp.toISOString(),
+                coins: 10 
             }]);
 
             if (!error) {
@@ -235,18 +245,21 @@
         function renderInventory() {
             const myLogs = logsData.filter(l => l.username === currentUser);
             const counts = {};
-            myLogs.forEach(l => { const m = l.note.match(/{{Spirit:(.*?)}}/); if(m) counts[m[1]] = (counts[m[1]]||0)+1; });
-            document.getElementById('spiritGrid').innerHTML = spiritPool.map(s => {
-                const count = counts[s.name] || 0;
-                return `
-                <div class="${count > 0 ? 'bg-sky-900/60 border-sky-400' : 'bg-slate-900/40 border-slate-700 opacity-40'} p-2 rounded-lg text-center border animate-fade-in">
+            myLogs.forEach(l => { 
+                const m = l.note.match(/{{Spirit:(.*?)}}/); 
+                if(m) counts[m[1]] = (counts[m[1]]||0)+1; 
+            });
+            
+            // 邏輯修正：沒蒐集到的不顯示
+            const collectedSpirits = spiritPool.filter(s => counts[s.name]);
+            document.getElementById('collectionCount').innerText = `${collectedSpirits.length}/20`;
+            
+            document.getElementById('spiritGrid').innerHTML = collectedSpirits.map(s => `
+                <div class="bg-sky-900/60 border-sky-400 p-2 rounded-lg text-center border animate-fade-in">
                     <img src="${getImgUrl(s.img)}" class="w-8 h-8 mx-auto object-contain">
                     <div class="text-[8px] text-sky-200 mt-1 truncate">${s.name}</div>
-                    <div class="text-[8px] text-gold font-bold">x${count}</div>
-                </div>`;
-            }).join('');
-            const collectedCount = spiritPool.filter(s => counts[s.name]).length;
-            document.getElementById('collectionCount').innerText = `${collectedCount}/20`;
+                    <div class="text-[8px] text-gold font-bold">x${counts[s.name]}</div>
+                </div>`).join('');
         }
 
         function renderCalendar() {
@@ -255,6 +268,7 @@
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
+            
             const myLogs = logsData.filter(l => l.username === currentUser);
             for (let i = 1; i <= daysInMonth; i++) {
                 const hasRecord = myLogs.some(l => new Date(l.created_at).getDate() === i);
@@ -267,7 +281,8 @@
         }
 
         function showDayDetail(day, hasRecord) {
-            const today = new Date().getDate();
+            const now = new Date();
+            const today = now.getDate();
             if (hasRecord) {
                 const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
                 const section = document.getElementById('personalSection');
@@ -287,8 +302,8 @@
                         <div class="text-[12px] text-sky-100 leading-relaxed italic">"${cleanNote}"</div>
                     </div>`;
                 }).join('');
-                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
+                // 日期卡控：未來 vs 過去
                 if (day > today) {
                     alert("這天還沒到喔！🌟");
                 } else {
@@ -300,7 +315,7 @@
         async function deleteLog(id) {
             if (confirm("能量將會消散... 確定要刪除這筆紀錄嗎？")) {
                 const { error } = await client.from('meditation_logs').delete().eq('id', id);
-                if (!error) { hidePersonal(); await fetchData(); }
+                if (!error) { hidePersonal(); fetchData(); }
             }
         }
 
@@ -310,7 +325,6 @@
             document.getElementById('saveBtn').setAttribute('onclick', `updateLog(${id})`);
             document.getElementById('saveBtn').innerText = "修正能量軌跡";
             validateForm();
-            window.scrollTo({ top: document.getElementById('note').offsetTop - 100, behavior: 'smooth' });
         }
 
         async function updateLog(id) {
@@ -320,27 +334,23 @@
             if (!error) {
                 alert("能量修正成功！");
                 document.getElementById('saveBtn').setAttribute('onclick', "triggerSummon()");
-                document.getElementById('saveBtn').innerHTML = "<span>匯聚禪定能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
+                document.getElementById('saveBtn').innerHTML = "<span>匯聚能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
-                hidePersonal();
-                await fetchData();
+                hidePersonal(); fetchData();
             }
         }
 
-        function remindPartner(targetName) {
-            const baseUrl = window.location.href.split('?')[0];
-            const remindUrl = `${baseUrl}?remind=${encodeURIComponent(targetName)}`;
-            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來對齊能量吧！✨\n點擊進入：${remindUrl}`);
-            window.open(`https://line.me/R/msg/text/?${text}`);
-        }
-
-        function hidePersonal() { document.getElementById('personalSection').classList.add('hidden'); }
         function validateForm() {
             const mins = parseInt(document.getElementById('minutes').value) || 0;
             const note = document.getElementById('note').value.trim();
+            const dateInput = document.getElementById('recordDate').value;
             const btn = document.getElementById('saveBtn');
-            btn.disabled = !(mins >= 10 && note.length > 0);
+            
+            const todayStr = new Date().toLocaleDateString('en-CA');
+            const isFuture = dateInput > todayStr;
+
+            btn.disabled = !(mins >= 10 && note.length > 0 && !isFuture);
             btn.classList.toggle('btn-disabled', btn.disabled);
             document.getElementById('btnIcon').innerText = btn.disabled ? '🔒' : '💠';
         }
@@ -360,6 +370,13 @@
             ).join('');
         }
 
+        function remindPartner(targetName) {
+            const baseUrl = window.location.href.split('?')[0];
+            const remindUrl = `${baseUrl}?remind=${encodeURIComponent(targetName)}`;
+            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來對齊能量吧！✨\n點擊進入：${remindUrl}`);
+            window.open(`https://line.me/R/msg/text/?${text}`);
+        }
+
         function renderLogs() {
             document.getElementById('historyLogs').innerHTML = logsData.map(l => {
                 const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
@@ -376,6 +393,7 @@
                 </div>`;
             }).join('');
         }
+
         function updateStreak() {
             const myLogs = logsData.filter(l => l.username === currentUser);
             const dates = [...new Set(myLogs.map(l => new Date(l.created_at).toDateString()))];
@@ -384,11 +402,16 @@
             while (dates.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
             document.getElementById('streakDisplay').innerText = `🔥 已連續禪定 ${streak} 天 | 能量充盈`;
         }
+
+        function hidePersonal() { document.getElementById('personalSection').classList.add('hidden'); }
+
+        // 粒子背景特效
         let canvas, ctx, particles = [];
         function initParticles() { canvas = document.getElementById('particleCanvas'); ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         class Particle { constructor(x, y) { this.x = x; this.y = y; this.size = Math.random()*5+2; this.speedX = (Math.random()-0.5)*15; this.speedY = (Math.random()-0.5)*15; this.opacity = 1; } update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.025; } draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); } }
         function createExplosion(x, y) { for(let i=0; i<50; i++) particles.push(new Particle(x, y)); animateParticles(); }
         function animateParticles() { ctx.clearRect(0,0,canvas.width,canvas.height); particles = particles.filter(p => p.opacity > 0); particles.forEach(p => { p.update(); p.draw(); }); if(particles.length) requestAnimationFrame(animateParticles); }
+
         init();
     </script>
 </body>
