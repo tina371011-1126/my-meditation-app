@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>奧秘靈視 - 月相禪定系統</title>
+    <title>禪定精靈顯現 - 禪定月相圖鑑</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
@@ -12,7 +12,7 @@
                 extend: {
                     colors: {
                         zen: { 900: '#0c4a6e', 950: '#082f49' },
-                        gold: '#fbbf24'
+                        gold: { DEFAULT: '#fbbf24', glow: '#fcd34d' }
                     }
                 }
             }
@@ -26,88 +26,142 @@
             font-family: 'PingFang TC', sans-serif; 
         }
         .glass-card { 
-            background: rgba(15, 23, 42, 0.8); 
+            background: rgba(15, 23, 42, 0.85); 
             backdrop-filter: blur(12px);
             border-radius: 24px; 
             border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
+        
+        /* 月曆樣式 */
         .calendar-dot { width: 8px; height: 8px; border-radius: 50%; margin: 2px auto; }
         .dot-filled { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
         .dot-empty { border: 1px solid rgba(56, 189, 248, 0.4); }
+
+        /* 橫向捲動條隱藏 */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
         .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); }
+        
+        .remind-btn {
+            background: rgba(14, 165, 233, 0.2);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #7dd3fc
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+        .remind-btn:hover { background: rgba(14, 165, 233, 0.4); color: white; }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
 
     <div id="loginOverlay" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md px-6 hidden">
-        <div class="glass-card p-8 w-full max-w-sm text-center">
-            <h2 class="text-3xl font-black text-sky-300 mb-4">🌌 奧秘靈視</h2>
-            <button onclick="handleGoogleLogin()" class="w-full bg-white text-zen-950 py-4 rounded-2xl font-bold flex items-center justify-center gap-2">
+        <div class="glass-card p-8 w-full max-w-sm text-center border-t border-sky-500/50">
+            <h2 class="text-3xl font-black text-sky-300 mb-4">🧞禪定精靈顯現</h2>
+            <p class="text-sm text-sky-400/70 mb-8">連結意識，開啟你的精靈圖鑑</p>
+            <button onclick="handleGoogleLogin()" class="w-full bg-white text-zen-950 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-sky-50 transition-colors">
                 <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6"> Google 帳號連結
             </button>
         </div>
     </div>
 
     <div id="gachaModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden px-6">
-        <div class="absolute inset-0 bg-black/95"></div>
-        <div id="resultPhase" class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold">
-            <h2 class="text-gold font-bold mb-4">✨ 奧秘顯現</h2>
-            <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-4 animate-pulse">
-            <div id="gachaName" class="text-2xl font-black mb-1"></div>
-            <p id="gachaDesc" class="text-xs text-sky-300 mb-6 italic"></p>
-            <button onclick="closeGacha()" class="w-full btn-gradient py-3 rounded-xl font-bold">收入圖鑑</button>
+        <div class="absolute inset-0 bg-black/95 backdrop-blur-sm"></div>
+        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-[0_0_50px_rgba(251,191,36,0.1)]">
+            <h2 class="text-gold font-bold mb-4 text-xl">✨ 精靈顯現</h2>
+            <div class="relative w-32 h-32 mx-auto mb-6">
+                <div class="absolute inset-0 bg-gold/20 blur-xl rounded-full animate-pulse"></div>
+                <img id="gachaImg" src="" class="relative z-10 w-full h-full object-contain drop-shadow-2xl">
+            </div>
+            <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
+            <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic"></p>
+            <button onclick="closeGacha()" class="w-full btn-gradient text-white py-3 rounded-xl font-bold hover:brightness-110 transition-all">收入圖鑑</button>
         </div>
     </div>
 
-    <div class="max-w-md mx-auto space-y-6">
-        <header class="flex justify-between items-center py-2">
+    <div class="max-w-md mx-auto space-y-6 pt-2">
+        <header class="flex justify-between items-center py-2 px-1">
             <div>
-                <h1 class="text-xl font-black text-sky-300">奧秘靈視調頻</h1>
-                <p id="streakDisplay" class="text-[10px] text-gold font-bold"></p>
+                <h1 class="text-xl font-black text-sky-200 tracking-wider">奧秘靈視調頻</h1>
+                <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">讀取星象中...</p>
             </div>
-            <div class="group relative">
-                <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-400 cursor-pointer">
-                <div class="absolute right-0 top-12 hidden group-hover:block glass-card p-2 z-50">
-                    <button onclick="logout()" class="text-xs text-red-400 font-bold whitespace-nowrap px-4 py-2">中斷連結 (登出)</button>
+            <div class="group relative z-50">
+                <img id="userAvatar" src="" class="w-10 h-10 rounded-full border-2 border-sky-500/50 cursor-pointer">
+                <div class="absolute right-0 top-12 hidden group-hover:block glass-card p-2 min-w-[100px]">
+                    <button onclick="logout()" class="text-xs text-red-300 font-bold w-full text-left px-3 py-2 hover:bg-white/5 rounded">中斷連結</button>
                 </div>
             </div>
         </header>
 
-        <div class="glass-card p-4">
-            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200"></h2>
-            <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-sky-500 mb-2">
+        <div class="glass-card p-5">
+            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">精靈紀錄</h2>
+            <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-sky-500 mb-2 font-bold">
                 <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
             <div id="calendarGrid" class="grid grid-cols-7 gap-1 text-center"></div>
         </div>
 
-        <div class="glass-card p-6 space-y-4">
+        <div class="glass-card p-6 space-y-4 relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
-                    <label class="text-[10px] text-sky-400 ml-1">調頻時空 (可補打卡)</label>
-                    <input type="date" id="recordDate" class="w-full p-2 text-xs rounded-lg bg-sky-900/50 border border-sky-700 outline-none">
+                    <label class="text-[10px] text-sky-400 ml-1">調頻時空 (補打卡)</label>
+                    <input type="date" id="recordDate" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none focus:border-sky-400 transition-colors">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[10px] text-sky-400 ml-1">分鐘數</label>
-                    <input type="number" id="minutes" placeholder="20" class="w-full p-2 text-xs rounded-lg bg-sky-900/50 border border-sky-700 outline-none">
+                    <input type="number" id="minutes" placeholder="20" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none focus:border-sky-400 transition-colors">
                 </div>
             </div>
-            <textarea id="note" placeholder="記錄此刻的心靈波動..." class="w-full p-3 text-xs h-16 rounded-lg bg-sky-900/50 border border-sky-700 outline-none"></textarea>
-            <button onclick="saveRecord()" class="w-full btn-gradient py-3 rounded-xl font-bold shadow-lg active:scale-95">匯聚奧秘 ‧ 召喚精靈</button>
+            <textarea id="note" placeholder="記錄此刻的心靈波動..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none focus:border-sky-400 resize-none transition-colors"></textarea>
+            
+            <button onclick="saveRecord()" class="w-full btn-gradient py-3.5 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
+                <span>匯聚禪定能量 ‧ 隨機召喚</span>
+                <span class="animate-pulse">💠</span>
+            </button>
         </div>
 
         <div class="glass-card p-5">
-            <h2 class="font-bold mb-4 text-sm text-sky-300">📚 已喚醒的奧秘</h2>
-            <div id="spiritGrid" class="grid grid-cols-4 gap-4"></div>
-            <div id="emptyTip" class="text-center text-xs text-sky-600 py-4 hidden">尚未有精靈回應你的召喚...</div>
+            <h2 class="font-bold mb-4 text-sm text-sky-300 flex justify-between items-center">
+                <span>📚 精靈圖鑑</span>
+                <span id="collectionCount" class="text-[10px] bg-sky-900 px-2 py-1 rounded text-gold">0/20</span>
+            </h2>
+            <div id="spiritGrid" class="grid grid-cols-4 gap-3"></div>
+            <div id="emptyTip" class="text-center text-xs text-sky-600/70 py-6 italic hidden">尚未有精靈回應你的召喚...<br>快去打卡試試手氣！</div>
+        </div>
+
+        <div class="glass-card p-5">
+            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">
+                🏆 禪定能量排行
+            </h2>
+            <div id="leaderboard" class="space-y-2"></div>
+        </div>
+
+        <div class="glass-card p-5">
+            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2">📖 夥伴禪定手札</h2>
+            <div id="historyLogs" class="space-y-4 max-h-60 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div id="personalSection" class="hidden space-y-2 pb-4">
+            <h2 class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
+                <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 🍃 我的專屬時光 (左右滑動)
+            </h2>
+            <div id="personalSlider" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x px-1">
+                </div>
         </div>
     </div>
 
     <script>
+        // Supabase 設定
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // 20隻奧秘精靈名單
         const spiritPool = [
             { name: '初心苔蘚', desc: '柔軟且謙卑的初發心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
             { name: '數息小童', desc: '專注呼吸的靈體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
@@ -118,13 +172,24 @@
             { name: '香燃煙靈', desc: '隨風而逝的無常', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
             { name: '木魚響響', desc: '清醒的節奏精靈', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
             { name: '蓮座花精', desc: '純淨的心靈花朵', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
-            { name: '虛空水母', desc: '漂浮在空性之海', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
-            // ... 可自行補足至 20 隻
+            { name: '虛空水母', desc: '漂浮在空性之海', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' },
+            // 為了確保有20隻，這裡重複使用圖片，但名稱不同
+            { name: '觀照之眼', desc: '洞察真實的智慧', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
+            { name: '慈悲雲朵', desc: '溫柔覆蓋大地的善意', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
+            { name: '脈輪光球', desc: '旋轉的能量核心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
+            { name: '般若卷軸', desc: '記載奧秘的古老靈魂', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/4.png' },
+            { name: '須彌山獸', desc: '世界的中心，穩重如山', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/5.png' },
+            { name: '金剛鑽狼', desc: '斬斷煩惱的銳利心性', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/6.png' },
+            { name: '涅槃鳳凰', desc: '超越生死的終極自在', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/7.png' },
+            { name: '真如星靈', desc: '接受當下的原本樣貌', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
+            { name: '頓悟雷光', desc: '劃破無明的覺醒瞬間', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
+            { name: '萬法歸一', desc: '宇宙萬物，本自一體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' }
         ];
 
         let currentUser = "";
         let logsData = [];
 
+        // 初始化
         async function init() {
             document.getElementById('recordDate').valueAsDate = new Date();
             const { data: { session } } = await client.auth.getSession();
@@ -149,12 +214,20 @@
         }
 
         async function logout() {
-            await client.auth.signOut();
-            location.reload();
+            if(confirm('確定要暫時切斷連結嗎？')) {
+                await client.auth.signOut();
+                location.reload();
+            }
+        }
+
+        function sendLineReminder(targetName) {
+            const message = encodeURIComponent(`${targetName}，禪定能量正在呼喚你！🔮\n快來累積能量，解鎖你的靈魂圖鑑吧！✨\n網址：${window.location.href}`);
+            window.open(`https://line.me/R/msg/text/?${message}`, '_blank');
         }
 
         async function fetchData() {
-            const { data, error } = await client.from('meditation_logs').select('*').eq('username', currentUser).order('created_at', { ascending: false });
+            // 抓取所有資料來做排行榜和全站日誌
+            const { data, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
             if (error) return;
             logsData = data;
             renderAll();
@@ -163,9 +236,13 @@
         function renderAll() {
             renderCalendar();
             renderInventory();
+            renderLeaderboard();
+            renderLogs();
+            renderPersonalSlider();
             calculateStreak();
         }
 
+        // 1. 月曆系統
         function renderCalendar() {
             const now = new Date();
             const year = now.getFullYear();
@@ -177,11 +254,12 @@
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = "";
 
-            // 填充空格
+            // 填充前面的空白
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
 
-            // 取得本月打卡日期清單 (YYYY-MM-DD)
-            const recordDates = logsData.map(l => {
+            // 篩選出自己的紀錄日期
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const recordDates = myLogs.map(l => {
                 const d = new Date(l.created_at);
                 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
             });
@@ -191,31 +269,36 @@
                 const isFilled = recordDates.includes(dateStr);
                 grid.innerHTML += `
                     <div class="py-1">
-                        <div class="text-[8px] text-sky-700">${day}</div>
+                        <div class="text-[8px] ${isFilled ? 'text-gold font-bold' : 'text-sky-700'}">${day}</div>
                         <div class="calendar-dot ${isFilled ? 'dot-filled' : 'dot-empty'}"></div>
                     </div>
                 `;
             }
         }
 
+        // 2. 圖鑑系統
         function renderInventory() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
             const inventory = {};
-            logsData.forEach(l => {
+            myLogs.forEach(l => {
                 const match = l.note.match(/{{Spirit:(.*?)}}/);
                 if (match) inventory[match[1]] = (inventory[match[1]] || 0) + 1;
             });
 
             const grid = document.getElementById('spiritGrid');
             const spiritNames = Object.keys(inventory);
+            
+            document.getElementById('collectionCount').innerText = `${spiritNames.length}/20`;
+
             grid.innerHTML = spiritNames.map(name => {
                 const s = spiritPool.find(p => p.name === name) || { img: '', desc: '' };
                 return `
-                    <div class="flex flex-col items-center text-center">
-                        <div class="relative bg-sky-900/40 p-2 rounded-xl border border-sky-700">
-                            <img src="${s.img}" class="w-10 h-10 object-contain">
-                            <span class="absolute -top-2 -right-2 bg-gold text-black text-[8px] font-bold px-1 rounded-full">x${inventory[name]}</span>
+                    <div class="flex flex-col items-center text-center group cursor-pointer" onclick="alert('【${name}】\\n${s.desc}')">
+                        <div class="relative bg-sky-900/40 p-2 rounded-xl border border-sky-700 group-hover:border-gold transition-colors">
+                            <img src="${s.img}" class="w-10 h-10 object-contain drop-shadow-lg">
+                            <span class="absolute -top-2 -right-2 bg-gold text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-white">x${inventory[name]}</span>
                         </div>
-                        <span class="text-[8px] mt-1 font-bold text-sky-200">${name}</span>
+                        <span class="text-[9px] mt-1.5 font-bold text-sky-200">${name}</span>
                     </div>
                 `;
             }).join('');
@@ -223,13 +306,89 @@
             document.getElementById('emptyTip').classList.toggle('hidden', spiritNames.length > 0);
         }
 
+        // 3. 排行榜 (依照分鐘數)
+        function renderLeaderboard() {
+            const userStats = {};
+            logsData.forEach(l => {
+                userStats[l.username] = (userStats[l.username] || 0) + (l.minutes || 0);
+            });
+            const sorted = Object.entries(userStats).sort((a,b) => b[1]-a[1]);
+            
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, m], i) => `
+                <div class="flex justify-between items-center p-2.5 ${n === currentUser ? 'bg-sky-800/50 border border-gold/30' : 'bg-sky-900/30'} rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-xs w-4 text-sky-500">${i+1}.</span>
+                        <span class="text-xs text-sky-100 font-bold">${n}</span>
+                        <span class="text-[9px] text-sky-400 font-mono bg-black/20 px-1.5 py-0.5 rounded">${m} min</span>
+                    </div>
+                    ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
+                </div>
+            `).join('') || '<div class="text-center text-xs text-sky-600">尚無數據</div>';
+        }
+
+        // 4. 全站日誌
+        function renderLogs() {
+            document.getElementById('historyLogs').innerHTML = logsData.map(l => {
+                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                const spiritMatch = l.note.match(/{{Spirit:(.*?)}}/);
+                const spiritName = spiritMatch ? spiritMatch[1] : null;
+                
+                return `
+                <div class="border-b border-sky-800/30 pb-3 last:border-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-sky-200">${l.username}</span>
+                        <span class="text-[9px] text-sky-500">${new Date(l.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="text-[11px] text-sky-100/80 mb-2 leading-relaxed bg-sky-900/30 p-2 rounded-lg">"${cleanNote}"</div>
+                    ${spiritName ? `
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-[9px] text-gold border border-gold/30 px-1 rounded">喚醒</span>
+                            <span class="text-[9px] text-sky-300 font-bold">${spiritName}</span>
+                        </div>
+                    ` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        // 5. 個人專屬滑動日誌
+        function renderPersonalSlider() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const slider = document.getElementById('personalSlider');
+            const section = document.getElementById('personalSection');
+
+            if (myLogs.length > 0) {
+                section.classList.remove('hidden');
+                slider.innerHTML = myLogs.map(l => {
+                    const d = new Date(l.created_at);
+                    const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                    const spiritMatch = l.note.match(/{{Spirit:(.*?)}}/);
+                    
+                    return `
+                    <div class="snap-center shrink-0 w-60 glass-card p-4 border border-sky-700/50">
+                        <div class="flex justify-between items-center mb-2 border-b border-sky-800 pb-2">
+                            <span class="text-gold font-bold text-xs">${d.getMonth()+1}/${d.getDate()}</span>
+                            <span class="text-[9px] text-sky-400 font-mono">${l.minutes} min</span>
+                        </div>
+                        <div class="h-16 overflow-y-auto text-[11px] text-sky-200 italic mb-2 scrollbar-hide">
+                            "${cleanNote}"
+                        </div>
+                        ${spiritMatch ? `<div class="text-[9px] text-center text-sky-400 bg-sky-950/50 rounded py-1">獲得：${spiritMatch[1]}</div>` : ''}
+                    </div>`;
+                }).join('');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        // 6. 連續打卡計算
         function calculateStreak() {
-            if (logsData.length === 0) return;
-            const dates = [...new Set(logsData.map(l => new Date(l.created_at).toDateString()))];
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            if (myLogs.length === 0) return;
+            
+            const dates = [...new Set(myLogs.map(l => new Date(l.created_at).toDateString()))];
             let streak = 0;
             let checkDate = new Date();
             
-            // 如果今天沒打，從昨天開始算，否則從今天開始算
             if (dates[0] !== checkDate.toDateString()) {
                 checkDate.setDate(checkDate.getDate() - 1);
             }
@@ -244,10 +403,10 @@
             }
 
             const cheers = [
-                "初試啼聲，奧秘正在萌芽 🌱",
+                "初試啼聲，能量正在萌芽 🌱",
                 "穩步共鳴，靈視愈發清晰 ✨",
-                "持之以恆，你正在與宇宙同頻 🌌",
-                "不可思議，你的靈魂散發著恆星之光 🌟"
+                "持之以恆，與宇宙同頻 🌌",
+                "不可思議，靈魂散發恆星之光 🌟"
             ];
             const cheer = streak > 7 ? cheers[3] : streak > 3 ? cheers[2] : streak > 1 ? cheers[1] : cheers[0];
             document.getElementById('streakDisplay').innerText = `🔥 連續調頻 ${streak} 天 | ${cheer}`;
@@ -260,25 +419,31 @@
 
             if (!mins || mins < 10 || !rawNote) return alert("請輸入完整紀錄（至少10分鐘）");
 
+            // 抽獎邏輯
             const wonSpirit = spiritPool[Math.floor(Math.random() * spiritPool.length)];
             const finalNote = `${rawNote} {{Spirit:${wonSpirit.name}}}`;
 
-            // 建立一筆帶有指定日期的紀錄（補上 coins 避免資料庫報錯）
-const { error } = await client.from('meditation_logs').insert([
-    { 
-        username: currentUser, 
-        minutes: mins, 
-        note: finalNote, 
-        coins: 0, // 補上這個數值
-        created_at: new Date(pickDate).toISOString() 
-    }
-]);
+            // 傳送資料 (coins: 0 為修復之前的 bug)
+            const { error } = await client.from('meditation_logs').insert([
+                { 
+                    username: currentUser, 
+                    minutes: mins, 
+                    note: finalNote, 
+                    coins: 0, 
+                    created_at: new Date(pickDate).toISOString() 
+                }
+            ]);
 
             if (!error) {
+                // 顯示抽獎結果
                 document.getElementById('gachaImg').src = wonSpirit.img;
                 document.getElementById('gachaName').innerText = wonSpirit.name;
                 document.getElementById('gachaDesc').innerText = wonSpirit.desc;
                 document.getElementById('gachaModal').classList.remove('hidden');
+                
+                // 清空並更新
+                document.getElementById('minutes').value = '';
+                document.getElementById('note').value = '';
                 fetchData();
             } else {
                 alert("傳輸失敗：" + error.message);
