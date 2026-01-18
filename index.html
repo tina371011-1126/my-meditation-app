@@ -47,7 +47,7 @@
         .remind-btn {
             background: rgba(14, 165, 233, 0.2);
             border: 1px solid rgba(56, 189, 248, 0.4);
-            color: #7dd3fc
+            color: #7dd3fc;
             padding: 2px 8px;
             border-radius: 6px;
             font-size: 10px;
@@ -71,7 +71,7 @@
     <div id="gachaModal" class="fixed inset-0 z-[70] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/95 backdrop-blur-sm"></div>
         <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-[0_0_50px_rgba(251,191,36,0.1)]">
-            <h2 class="text-gold font-bold mb-4 text-xl">✨ 精靈顯現</h2>
+            <h2 class="text-gold font-bold mb-4 text-xl">✨ 禪定精靈顯現</h2>
             <div class="relative w-32 h-32 mx-auto mb-6">
                 <div class="absolute inset-0 bg-gold/20 blur-xl rounded-full animate-pulse"></div>
                 <img id="gachaImg" src="" class="relative z-10 w-full h-full object-contain drop-shadow-2xl">
@@ -97,7 +97,7 @@
         </header>
 
         <div class="glass-card p-5">
-            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">精靈紀錄</h2>
+            <h2 id="calendarMonth" class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2 cursor-pointer" onclick="renderPersonalSlider()">精靈紀錄</h2>
             <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-sky-500 mb-2 font-bold">
                 <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
@@ -106,7 +106,6 @@
 
         <div class="glass-card p-6 space-y-4 relative overflow-hidden">
             <div class="absolute -top-10 -right-10 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            
             <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                     <label class="text-[10px] text-sky-400 ml-1">調頻時空 (可補打卡)</label>
@@ -118,7 +117,6 @@
                 </div>
             </div>
             <textarea id="note" placeholder="記錄此刻的禪定心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none focus:border-sky-400 resize-none transition-colors"></textarea>
-            
             <button onclick="saveRecord()" class="w-full btn-gradient py-3.5 rounded-xl font-bold text-white shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2">
                 <span>匯聚禪定能量 ‧ 隨機召喚</span>
                 <span class="animate-pulse">💠</span>
@@ -135,9 +133,7 @@
         </div>
 
         <div class="glass-card p-5">
-            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">
-                🏆 禪定能量排行
-            </h2>
+            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">🏆 禪定能量排行</h2>
             <div id="leaderboard" class="space-y-2"></div>
         </div>
 
@@ -147,21 +143,19 @@
         </div>
 
         <div id="personalSection" class="hidden space-y-2 pb-4">
-            <h2 class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
-                <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 🍃 我的專屬禪定時光 (左右滑動)
+            <h2 id="personalTitle" class="font-bold text-sky-200 text-sm ml-2 flex items-center gap-2">
+                <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
+                <span id="personalTitleText">🍃 我的專屬禪定時光</span>
             </h2>
-            <div id="personalSlider" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x px-1">
-                </div>
+            <div id="personalSlider" class="flex gap-3 overflow-x-auto pb-2 hide-scrollbar snap-x px-1"></div>
         </div>
     </div>
 
     <script>
-        // Supabase 設定
         const SUPABASE_URL = 'https://szzpoyluooexmshcmpmk.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_tsVcpheph5XujUP9CGPRwA_pMlGNpb3';
         const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // 20隻奧秘精靈名單
         const spiritPool = [
             { name: '初心苔蘚', desc: '柔軟且謙卑的初發心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
             { name: '數息小童', desc: '專注呼吸的靈體', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
@@ -173,7 +167,6 @@
             { name: '木魚響響', desc: '清醒的節奏精靈', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/8.png' },
             { name: '蓮座花精', desc: '純淨的心靈花朵', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/9.png' },
             { name: '虛空水母', desc: '漂浮在空性之海', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/10.png' },
-            // 為了確保有20隻，這裡重複使用圖片，但名稱不同
             { name: '觀照之眼', desc: '洞察真實的智慧', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/1.png' },
             { name: '慈悲雲朵', desc: '溫柔覆蓋大地的善意', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/2.png' },
             { name: '脈輪光球', desc: '旋轉的能量核心', img: 'https://raw.githubusercontent.com/tina371011-1126/my-spirit-assets/refs/heads/main/3.png' },
@@ -189,7 +182,6 @@
         let currentUser = "";
         let logsData = [];
 
-        // 初始化
         async function init() {
             document.getElementById('recordDate').valueAsDate = new Date();
             const { data: { session } } = await client.auth.getSession();
@@ -226,7 +218,6 @@
         }
 
         async function fetchData() {
-            // 抓取所有資料來做排行榜和全站日誌
             const { data, error } = await client.from('meditation_logs').select('*').order('created_at', { ascending: false });
             if (error) return;
             logsData = data;
@@ -238,11 +229,11 @@
             renderInventory();
             renderLeaderboard();
             renderLogs();
-            renderPersonalSlider();
+            renderPersonalSlider(); // 預設載入全部個人紀錄
             calculateStreak();
         }
 
-        // 1. 月曆系統
+        // 1. 月曆系統 (強化版：點擊日期篩選)
         function renderCalendar() {
             const now = new Date();
             const year = now.getFullYear();
@@ -254,10 +245,8 @@
             const grid = document.getElementById('calendarGrid');
             grid.innerHTML = "";
 
-            // 填充前面的空白
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
 
-            // 篩選出自己的紀錄日期
             const myLogs = logsData.filter(l => l.username === currentUser);
             const recordDates = myLogs.map(l => {
                 const d = new Date(l.created_at);
@@ -267,8 +256,11 @@
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
                 const isFilled = recordDates.includes(dateStr);
+                
+                // 為有紀錄的日期增加 onclick
                 grid.innerHTML += `
-                    <div class="py-1">
+                    <div class="py-1 ${isFilled ? 'cursor-pointer hover:bg-sky-800/40 rounded-lg transition-colors' : ''}" 
+                         ${isFilled ? `onclick="showDayDetail('${dateStr}')"` : ''}>
                         <div class="text-[8px] ${isFilled ? 'text-gold font-bold' : 'text-sky-700'}">${day}</div>
                         <div class="calendar-dot ${isFilled ? 'dot-filled' : 'dot-empty'}"></div>
                     </div>
@@ -276,88 +268,38 @@
             }
         }
 
-        // 2. 圖鑑系統
-        function renderInventory() {
-            const myLogs = logsData.filter(l => l.username === currentUser);
-            const inventory = {};
-            myLogs.forEach(l => {
-                const match = l.note.match(/{{Spirit:(.*?)}}/);
-                if (match) inventory[match[1]] = (inventory[match[1]] || 0) + 1;
+        // 核心功能：點擊月曆後執行的行為
+        function showDayDetail(targetDate) {
+            const filtered = logsData.filter(l => {
+                const d = new Date(l.created_at);
+                const lDate = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                return l.username === currentUser && lDate === targetDate;
             });
-
-            const grid = document.getElementById('spiritGrid');
-            const spiritNames = Object.keys(inventory);
             
-            document.getElementById('collectionCount').innerText = `${spiritNames.length}/20`;
-
-            grid.innerHTML = spiritNames.map(name => {
-                const s = spiritPool.find(p => p.name === name) || { img: '', desc: '' };
-                return `
-                    <div class="flex flex-col items-center text-center group cursor-pointer" onclick="alert('【${name}】\\n${s.desc}')">
-                        <div class="relative bg-sky-900/40 p-2 rounded-xl border border-sky-700 group-hover:border-gold transition-colors">
-                            <img src="${s.img}" class="w-10 h-10 object-contain drop-shadow-lg">
-                            <span class="absolute -top-2 -right-2 bg-gold text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-white">x${inventory[name]}</span>
-                        </div>
-                        <span class="text-[9px] mt-1.5 font-bold text-sky-200">${name}</span>
-                    </div>
-                `;
-            }).join('');
+            // 更新下方區塊內容，並傳入標題文字
+            renderPersonalSlider(filtered, `${targetDate} 的禪定`);
             
-            document.getElementById('emptyTip').classList.toggle('hidden', spiritNames.length > 0);
+            // 平滑滾動到下方
+            document.getElementById('personalSection').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // 3. 排行榜 (依照分鐘數)
-        function renderLeaderboard() {
-            const userStats = {};
-            logsData.forEach(l => {
-                userStats[l.username] = (userStats[l.username] || 0) + (l.minutes || 0);
-            });
-            const sorted = Object.entries(userStats).sort((a,b) => b[1]-a[1]);
-            
-            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, m], i) => `
-                <div class="flex justify-between items-center p-2.5 ${n === currentUser ? 'bg-sky-800/50 border border-gold/30' : 'bg-sky-900/30'} rounded-xl">
-                    <div class="flex items-center gap-3">
-                        <span class="font-bold text-xs w-4 text-sky-500">${i+1}.</span>
-                        <span class="text-xs text-sky-100 font-bold">${n}</span>
-                        <span class="text-[9px] text-sky-400 font-mono bg-black/20 px-1.5 py-0.5 rounded">${m} min</span>
-                    </div>
-                    ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
-                </div>
-            `).join('') || '<div class="text-center text-xs text-sky-600">尚無數據</div>';
-        }
-
-        // 4. 全站日誌
-        function renderLogs() {
-            document.getElementById('historyLogs').innerHTML = logsData.map(l => {
-                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
-                const spiritMatch = l.note.match(/{{Spirit:(.*?)}}/);
-                const spiritName = spiritMatch ? spiritMatch[1] : null;
-                
-                return `
-                <div class="border-b border-sky-800/30 pb-3 last:border-0">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold text-sky-200">${l.username}</span>
-                        <span class="text-[9px] text-sky-500">${new Date(l.created_at).toLocaleDateString()}</span>
-                    </div>
-                    <div class="text-[11px] text-sky-100/80 mb-2 leading-relaxed bg-sky-900/30 p-2 rounded-lg">"${cleanNote}"</div>
-                    ${spiritName ? `
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-[9px] text-gold border border-gold/30 px-1 rounded">喚醒</span>
-                            <span class="text-[9px] text-sky-300 font-bold">${spiritName}</span>
-                        </div>
-                    ` : ''}
-                </div>`;
-            }).join('');
-        }
-
-        // 5. 個人專屬滑動日誌
-        function renderPersonalSlider() {
-            const myLogs = logsData.filter(l => l.username === currentUser);
+        // 修改個人日誌渲染函數：支援傳入篩選過的資料
+        function renderPersonalSlider(filteredData = null, titleSuffix = "") {
+            const myLogs = filteredData || logsData.filter(l => l.username === currentUser);
             const slider = document.getElementById('personalSlider');
             const section = document.getElementById('personalSection');
+            const titleText = document.getElementById('personalTitleText');
 
             if (myLogs.length > 0) {
                 section.classList.remove('hidden');
+                
+                // 設定標題，如果有篩選日期，顯示「顯示全部」按鈕
+                if(filteredData) {
+                    titleText.innerHTML = `🍃 ${titleSuffix} <button onclick="renderPersonalSlider()" class="text-[10px] ml-2 text-sky-400 underline">顯示全部</button>`;
+                } else {
+                    titleText.innerText = `🍃 我的專屬禪定時光 (左右滑動)`;
+                }
+
                 slider.innerHTML = myLogs.map(l => {
                     const d = new Date(l.created_at);
                     const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
@@ -380,34 +322,78 @@
             }
         }
 
-        // 6. 連續打卡計算
+        // 2. 圖鑑系統
+        function renderInventory() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            const inventory = {};
+            myLogs.forEach(l => {
+                const match = l.note.match(/{{Spirit:(.*?)}}/);
+                if (match) inventory[match[1]] = (inventory[match[1]] || 0) + 1;
+            });
+
+            const grid = document.getElementById('spiritGrid');
+            const spiritNames = Object.keys(inventory);
+            document.getElementById('collectionCount').innerText = `${spiritNames.length}/20`;
+
+            grid.innerHTML = spiritNames.map(name => {
+                const s = spiritPool.find(p => p.name === name) || { img: '', desc: '' };
+                return `
+                    <div class="flex flex-col items-center text-center group cursor-pointer" onclick="alert('【${name}】\\n${s.desc}')">
+                        <div class="relative bg-sky-900/40 p-2 rounded-xl border border-sky-700 group-hover:border-gold transition-colors">
+                            <img src="${s.img}" class="w-10 h-10 object-contain drop-shadow-lg">
+                            <span class="absolute -top-2 -right-2 bg-gold text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full border border-white">x${inventory[name]}</span>
+                        </div>
+                        <span class="text-[9px] mt-1.5 font-bold text-sky-200">${name}</span>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('emptyTip').classList.toggle('hidden', spiritNames.length > 0);
+        }
+
+        function renderLeaderboard() {
+            const userStats = {};
+            logsData.forEach(l => { userStats[l.username] = (userStats[l.username] || 0) + (l.minutes || 0); });
+            const sorted = Object.entries(userStats).sort((a,b) => b[1]-a[1]);
+            document.getElementById('leaderboard').innerHTML = sorted.slice(0, 10).map(([n, m], i) => `
+                <div class="flex justify-between items-center p-2.5 ${n === currentUser ? 'bg-sky-800/50 border border-gold/30' : 'bg-sky-900/30'} rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <span class="font-bold text-xs w-4 text-sky-500">${i+1}.</span>
+                        <span class="text-xs text-sky-100 font-bold">${n}</span>
+                        <span class="text-[9px] text-sky-400 font-mono bg-black/20 px-1.5 py-0.5 rounded">${m} min</span>
+                    </div>
+                    ${n !== currentUser ? `<button onclick="sendLineReminder('${n}')" class="remind-btn">🔔 提醒</button>` : ''}
+                </div>
+            `).join('') || '<div class="text-center text-xs text-sky-600">尚無數據</div>';
+        }
+
+        function renderLogs() {
+            document.getElementById('historyLogs').innerHTML = logsData.map(l => {
+                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                const spiritMatch = l.note.match(/{{Spirit:(.*?)}}/);
+                const spiritName = spiritMatch ? spiritMatch[1] : null;
+                return `
+                <div class="border-b border-sky-800/30 pb-3 last:border-0">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold text-sky-200">${l.username}</span>
+                        <span class="text-[9px] text-sky-500">${new Date(l.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="text-[11px] text-sky-100/80 mb-2 leading-relaxed bg-sky-900/30 p-2 rounded-lg">"${cleanNote}"</div>
+                    ${spiritName ? `<div class="flex items-center gap-1.5"><span class="text-[9px] text-gold border border-gold/30 px-1 rounded">喚醒</span><span class="text-[9px] text-sky-300 font-bold">${spiritName}</span></div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
         function calculateStreak() {
             const myLogs = logsData.filter(l => l.username === currentUser);
             if (myLogs.length === 0) return;
-            
             const dates = [...new Set(myLogs.map(l => new Date(l.created_at).toDateString()))];
             let streak = 0;
             let checkDate = new Date();
-            
-            if (dates[0] !== checkDate.toDateString()) {
-                checkDate.setDate(checkDate.getDate() - 1);
-            }
-
+            if (dates[0] !== checkDate.toDateString()) checkDate.setDate(checkDate.getDate() - 1);
             for (let i = 0; i < dates.length; i++) {
-                if (dates.includes(checkDate.toDateString())) {
-                    streak++;
-                    checkDate.setDate(checkDate.getDate() - 1);
-                } else {
-                    break;
-                }
+                if (dates.includes(checkDate.toDateString())) { streak++; checkDate.setDate(checkDate.getDate() - 1); } else break;
             }
-
-            const cheers = [
-                "初試啼聲，能量正在萌芽 🌱",
-                "穩步共鳴，靈視愈發清晰 ✨",
-                "持之以恆，與宇宙同頻 🌌",
-                "不可思議，靈魂散發恆星之光 🌟"
-            ];
+            const cheers = ["初試啼聲，能量正在萌芽 🌱", "穩步共鳴，靈視愈發清晰 ✨", "持之以恆，與宇宙同頻 🌌", "不可思議，靈魂散發恆星之光 🌟"];
             const cheer = streak > 7 ? cheers[3] : streak > 3 ? cheers[2] : streak > 1 ? cheers[1] : cheers[0];
             document.getElementById('streakDisplay').innerText = `🔥 連續調頻 ${streak} 天 | ${cheer}`;
         }
@@ -416,32 +402,15 @@
             const mins = parseInt(document.getElementById('minutes').value);
             const rawNote = document.getElementById('note').value.trim();
             const pickDate = document.getElementById('recordDate').value;
-
             if (!mins || mins < 10 || !rawNote) return alert("請輸入完整紀錄（至少10分鐘）");
-
-            // 抽獎邏輯
             const wonSpirit = spiritPool[Math.floor(Math.random() * spiritPool.length)];
             const finalNote = `${rawNote} {{Spirit:${wonSpirit.name}}}`;
-
-            // 傳送資料 (coins: 0 為修復之前的 bug)
-            const { error } = await client.from('meditation_logs').insert([
-                { 
-                    username: currentUser, 
-                    minutes: mins, 
-                    note: finalNote, 
-                    coins: 0, 
-                    created_at: new Date(pickDate).toISOString() 
-                }
-            ]);
-
+            const { error } = await client.from('meditation_logs').insert([{ username: currentUser, minutes: mins, note: finalNote, coins: 0, created_at: new Date(pickDate).toISOString() }]);
             if (!error) {
-                // 顯示抽獎結果
                 document.getElementById('gachaImg').src = wonSpirit.img;
                 document.getElementById('gachaName').innerText = wonSpirit.name;
                 document.getElementById('gachaDesc').innerText = wonSpirit.desc;
                 document.getElementById('gachaModal').classList.remove('hidden');
-                
-                // 清空並更新
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 fetchData();
@@ -451,7 +420,6 @@
         }
 
         function closeGacha() { document.getElementById('gachaModal').classList.add('hidden'); }
-
         init();
     </script>
 </body>
