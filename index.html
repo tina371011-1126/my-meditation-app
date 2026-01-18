@@ -18,7 +18,6 @@
         @keyframes crystal-summon { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.2) rotate(10deg); filter: brightness(1.5); } 100% { transform: scale(1.5); opacity: 0; } }
         .crystal-active { animation: crystal-summon 1.2s forwards ease-in; }
         #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
-        /* 日期選擇器反灰樣式優化 */
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
     </style>
 </head>
@@ -34,7 +33,7 @@
 
     <div id="gachaModal" class="fixed inset-0 z-[300] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="relative glass-card p-8 w-full max-sm text-center border-2 border-gold shadow-2xl">
+        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl">
             <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 禪定精靈現身 ✨</h2>
             <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]">
             <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
@@ -154,7 +153,6 @@
         let logsData = [];
 
         async function init() {
-            // 設定今日日期與最大日期限制（明天以後反灰）
             const today = new Date();
             const dateStr = today.toISOString().split('T')[0];
             const dateInput = document.getElementById('recordDate');
@@ -238,14 +236,17 @@
             const myLogs = logsData.filter(l => l.username === currentUser);
             const counts = {};
             myLogs.forEach(l => { const m = l.note.match(/{{Spirit:(.*?)}}/); if(m) counts[m[1]] = (counts[m[1]]||0)+1; });
-            const collectedSpirits = spiritPool.filter(s => counts[s.name]);
-            document.getElementById('collectionCount').innerText = `${collectedSpirits.length}/20`;
-            document.getElementById('spiritGrid').innerHTML = collectedSpirits.map(s => `
-                <div class="bg-sky-900/60 border-sky-400 p-2 rounded-lg text-center border animate-fade-in">
+            document.getElementById('spiritGrid').innerHTML = spiritPool.map(s => {
+                const count = counts[s.name] || 0;
+                return `
+                <div class="${count > 0 ? 'bg-sky-900/60 border-sky-400' : 'bg-slate-900/40 border-slate-700 opacity-40'} p-2 rounded-lg text-center border animate-fade-in">
                     <img src="${getImgUrl(s.img)}" class="w-8 h-8 mx-auto object-contain">
                     <div class="text-[8px] text-sky-200 mt-1 truncate">${s.name}</div>
-                    <div class="text-[8px] text-gold font-bold">x${counts[s.name]}</div>
-                </div>`).join('');
+                    <div class="text-[8px] text-gold font-bold">x${count}</div>
+                </div>`;
+            }).join('');
+            const collectedCount = spiritPool.filter(s => counts[s.name]).length;
+            document.getElementById('collectionCount').innerText = `${collectedCount}/20`;
         }
 
         function renderCalendar() {
@@ -266,26 +267,34 @@
         }
 
         function showDayDetail(day, hasRecord) {
-            if (!hasRecord) { alert("這天偷懶囉！😴"); return; }
-            const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
-            const section = document.getElementById('personalSection');
-            section.classList.remove('hidden');
-            document.getElementById('selectedDateText').innerText = `🍃 ${day}日 的專屬紀錄`;
-            document.getElementById('personalSlider').innerHTML = filtered.map(l => {
-                const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
-                return `
-                <div class="snap-center shrink-0 w-64 glass-card p-4 border border-sky-600/30">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-sky-400 font-bold text-[10px]">禪定: ${l.minutes} 分鐘</span>
-                        <div class="flex gap-2">
-                            <button onclick="editLog(${l.id}, '${cleanNote}', ${l.minutes})" class="text-[10px] text-yellow-500">修改</button>
-                            <button onclick="deleteLog(${l.id})" class="text-[10px] text-red-500">刪除</button>
+            const today = new Date().getDate();
+            if (hasRecord) {
+                const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
+                const section = document.getElementById('personalSection');
+                section.classList.remove('hidden');
+                document.getElementById('selectedDateText').innerText = `🍃 ${day}日 的專屬紀錄`;
+                document.getElementById('personalSlider').innerHTML = filtered.map(l => {
+                    const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
+                    return `
+                    <div class="snap-center shrink-0 w-64 glass-card p-4 border border-sky-600/30">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sky-400 font-bold text-[10px]">禪定: ${l.minutes} 分鐘</span>
+                            <div class="flex gap-2">
+                                <button onclick="editLog(${l.id}, '${cleanNote}', ${l.minutes})" class="text-[10px] text-yellow-500">修改</button>
+                                <button onclick="deleteLog(${l.id})" class="text-[10px] text-red-500">刪除</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="text-[12px] text-sky-100 leading-relaxed italic">"${cleanNote}"</div>
-                </div>`;
-            }).join('');
-            section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        <div class="text-[12px] text-sky-100 leading-relaxed italic">"${cleanNote}"</div>
+                    </div>`;
+                }).join('');
+                section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                if (day > today) {
+                    alert("這天還沒到喔！🌟");
+                } else {
+                    alert("這天偷懶囉！😴");
+                }
+            }
         }
 
         async function deleteLog(id) {
@@ -311,7 +320,7 @@
             if (!error) {
                 alert("能量修正成功！");
                 document.getElementById('saveBtn').setAttribute('onclick', "triggerSummon()");
-                document.getElementById('saveBtn').innerHTML = "<span>匯聚能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
+                document.getElementById('saveBtn').innerHTML = "<span>匯聚禪定能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 hidePersonal();
