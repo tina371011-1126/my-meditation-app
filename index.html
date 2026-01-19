@@ -19,6 +19,10 @@
         .crystal-active { animation: crystal-summon 1.2s forwards ease-in; }
         #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
+
+        /* 新增進度條特效 */
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .bar-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; position: absolute; top: 0; left: 0; width: 100%; height: 100%; mix-blend-mode: overlay; }
     </style>
 </head>
 <body class="min-h-screen p-4 pb-24">
@@ -53,6 +57,38 @@
             </div>
         </header>
 
+        <div class="glass-card p-5 relative overflow-hidden">
+            <div class="flex justify-between items-end mb-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-xl">🎓</span>
+                    <div>
+                        <h2 class="text-sky-200 font-bold text-xs">本學期能量修煉</h2>
+                        <div class="text-[9px] text-sky-400">距離期末超越還需努力</div>
+                    </div>
+                </div>
+                <span id="cultivationRank" class="text-sm text-gold font-black font-mono tracking-wide">計算中...</span>
+            </div>
+            
+            <div class="relative h-5 bg-sky-950 rounded-full border border-sky-800/50 overflow-hidden shadow-inner">
+                <div id="xpBar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 via-sky-400 to-amber-300 transition-all duration-1000 ease-out w-0 flex items-center justify-end pr-2">
+                   <div class="bar-shimmer"></div>
+                </div>
+                <div class="absolute inset-0 flex justify-between px-3 items-center text-[8px] font-bold text-white/50 z-10">
+                    <span>🌬️ 氣</span>
+                    <span>⚡️ 電</span>
+                    <span>🌞 光</span>
+                    <span>❤️ 自性</span>
+                </div>
+            </div>
+
+            <div class="flex justify-between mt-2 text-[9px]">
+                <span id="currentXp" class="text-sky-300">目前累積: 0 min</span>
+                <span class="text-sky-500">學期目標: 3000 min</span>
+            </div>
+            <div id="flavorText" class="mt-2 text-[10px] text-center text-amber-200/80 italic border-t border-sky-800/30 pt-2">
+                "萬丈高樓平地起，請先從呼吸開始..."
+            </div>
+        </div>
         <div class="glass-card p-5">
             <h2 class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">禪定紀錄月曆</h2>
             <div class="grid grid-cols-7 gap-1 text-center text-[9px] text-sky-500 mb-2">
@@ -65,7 +101,7 @@
             <h2 class="font-bold text-sky-200 text-sm ml-2 flex justify-between items-center">
                 <span class="flex items-center gap-2">
                     <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
-                    <span id="selectedDateText">🍃 專屬紀錄</span>
+                    <span id="selectedDateText">🍃 我的專屬紀錄</span>
                 </span>
                 <button onclick="hidePersonal()" class="text-[10px] text-sky-500 px-2">關閉 ✕</button>
             </h2>
@@ -89,7 +125,7 @@
             <textarea id="note" oninput="validateForm()" placeholder="此刻的心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none resize-none"></textarea>
             
             <button id="saveBtn" onclick="triggerSummon()" disabled class="w-full btn-gradient btn-disabled py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2">
-                <span>匯聚能量 ‧ 召喚精靈</span>
+                <span>匯聚禪定能量 ‧ 召喚精靈</span>
                 <span id="btnIcon">🔒</span>
             </button>
         </div>
@@ -194,6 +230,32 @@
             renderLeaderboard(); 
             renderLogs(); 
             updateStreak(); 
+            renderSemesterProgress(); // 新增：渲染進度條
+        }
+
+        // 新增：進度條渲染邏輯
+        function renderSemesterProgress() {
+            const myLogs = logsData.filter(l => l.username === currentUser);
+            // 這裡假設只計算最近 4 個月或所有時間的累積，為了簡單有趣，我們先計算總累積
+            // 若要嚴格 4 個月，可加入日期篩選
+            const totalMinutes = myLogs.reduce((acc, curr) => acc + curr.minutes, 0);
+            const semesterGoal = 3000; // 學期目標：3000分鐘 (約每天25分鐘 x 4個月)
+            
+            const percentage = Math.min((totalMinutes / semesterGoal) * 100, 100).toFixed(1);
+            document.getElementById('xpBar').style.width = `${percentage}%`;
+            document.getElementById('currentXp').innerText = `目前累積: ${totalMinutes} min`;
+            
+            // 修仙等級判定
+            let rank = "🌱 練氣期";
+            let flavor = "萬丈高樓平地起，先從呼吸開始...";
+            
+            if (totalMinutes >= 500) { rank = "🌬️ 入門選手"; flavor = "根基漸穩，考試的時候心比較不會慌了吧？"; }
+            if (totalMinutes >= 1500) { rank = "⚡️ 穩固高手"; flavor = "體內能量可以集中精神，報告寫不出來也能心如止水。"; }
+            if (totalMinutes >= 2500) { rank = "🌞 小有成就"; flavor = "精神力大幅提升，已經可以一邊禪定一邊思考微積分了！"; }
+            if (totalMinutes >= semesterGoal) { rank = "✨ 突破超越"; flavor = "太厲害了！這學期的你，已經是傳說中的存在。"; }
+            
+            document.getElementById('cultivationRank').innerText = rank;
+            document.getElementById('flavorText').innerText = `"${flavor}"`;
         }
 
         function triggerSummon() {
@@ -287,7 +349,7 @@
                 const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
                 const section = document.getElementById('personalSection');
                 section.classList.remove('hidden');
-                document.getElementById('selectedDateText').innerText = `🍃 ${day}日 的專屬紀錄`;
+                document.getElementById('selectedDateText').innerText = `🍃 ${day}日 的專屬禪定紀錄`;
                 document.getElementById('personalSlider').innerHTML = filtered.map(l => {
                     const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
                     return `
@@ -323,7 +385,7 @@
             document.getElementById('minutes').value = mins;
             document.getElementById('note').value = note;
             document.getElementById('saveBtn').setAttribute('onclick', `updateLog(${id})`);
-            document.getElementById('saveBtn').innerText = "修正能量軌跡";
+            document.getElementById('saveBtn').innerText = "修正禪定軌跡";
             validateForm();
         }
 
@@ -332,9 +394,9 @@
             const note = document.getElementById('note').value;
             const { error } = await client.from('meditation_logs').update({ minutes: parseInt(mins), note: note }).eq('id', id);
             if (!error) {
-                alert("能量修正成功！");
+                alert("禪定紀錄修正成功！");
                 document.getElementById('saveBtn').setAttribute('onclick', "triggerSummon()");
-                document.getElementById('saveBtn').innerHTML = "<span>匯聚能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
+                document.getElementById('saveBtn').innerHTML = "<span>匯聚禪定能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 hidePersonal(); fetchData();
@@ -352,7 +414,7 @@
 
             btn.disabled = !(mins >= 10 && note.length > 0 && !isFuture);
             btn.classList.toggle('btn-disabled', btn.disabled);
-            document.getElementById('btnIcon').innerText = btn.disabled ? '🔒' : '💠';
+            document.getElementById('btnIcon').innerText = btn.disabled ? '🔒' : '🧞';
         }
 
         function renderLeaderboard() {
@@ -363,7 +425,7 @@
                 `<div class="flex justify-between items-center p-3 ${n===currentUser?'bg-sky-800/60 border border-gold/30':'bg-sky-900/30'} rounded-xl text-xs">
                     <div class="flex items-center gap-2">
                         <span>${i+1}. ${n}</span>
-                        ${n !== currentUser ? `<button onclick="remindPartner('${n}')" class="text-[9px] bg-green-600 px-1.5 py-0.5 rounded text-white opacity-80">叮嚀</button>` : ''}
+                        ${n !== currentUser ? `<button onclick="remindPartner('${n}')" class="text-[9px] bg-green-600 px-1.5 py-0.5 rounded text-white opacity-80">提醒🔔</button>` : ''}
                     </div>
                     <span class="font-mono text-sky-400">${m} min</span>
                 </div>`
@@ -373,7 +435,7 @@
         function remindPartner(targetName) {
             const baseUrl = window.location.href.split('?')[0];
             const remindUrl = `${baseUrl}?remind=${encodeURIComponent(targetName)}`;
-            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來對齊能量吧！✨\n點擊進入：${remindUrl}`);
+            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來搜集能量吧！✨\n點擊進入：${remindUrl}`);
             window.open(`https://line.me/R/msg/text/?${text}`);
         }
 
