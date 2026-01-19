@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定精靈 - 夥伴連結版</title>
+    <title>禪定精靈 - 夥伴共振版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -135,7 +135,7 @@
                 <span>📚 已收集精靈</span>
                 <span id="collectionCount" class="text-[10px] bg-sky-900 px-2 py-1 rounded text-gold">0/20</span>
             </h2>
-            <div id="spiritGrid" class="grid grid-cols-4 gap-2"></div>
+            <div id="spiritGrid" class="grid grid-cols-4 gap-3"></div>
         </div>
 
         <div class="glass-card p-5">
@@ -184,6 +184,7 @@
             { name: '萬法歸一', desc: '宇宙萬物，本自一體，回歸最初的純粹。', img: '20.png' }
         ];
 
+        // 修正為正確的 Raw 連結
         const getImgUrl = (fileName) => `https://raw.githubusercontent.com/tina371011-1126/zen-spirit-assets-20-/refs/heads/main/${fileName}`;
         let currentUser = "";
         let logsData = [];
@@ -208,7 +209,7 @@
                 document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
                 const urlParams = new URLSearchParams(window.location.search);
                 if(urlParams.get('remind') === currentUser) {
-                    setTimeout(() => alert(`🔔 夥伴呼喚：${currentUser}，今日能量尚未對齊，快來禪定吧！`), 1000);
+                    setTimeout(() => alert(`🔔 夥伴呼喚：${currentUser}，今日能量尚未更新，快來禪定吧！`), 1000);
                 }
                 fetchData();
             } else { overlay.classList.remove('hidden'); }
@@ -274,7 +275,18 @@
             const mins = document.getElementById('minutes').value;
             const note = document.getElementById('note').value;
             const dateInput = document.getElementById('recordDate').value;
-            const spirit = spiritPool[Math.floor(Math.random() * spiritPool.length)];
+            
+            // ---------- 抽籤機率調整 (維持不變) ----------
+            const rand = Math.random();
+            let groupIndex = 0;
+            if (rand < 0.50) groupIndex = 0;
+            else if (rand < 0.80) groupIndex = 1;
+            else if (rand < 0.95) groupIndex = 2;
+            else groupIndex = 3;
+            const spiritIndex = (groupIndex * 5) + Math.floor(Math.random() * 5);
+            const spirit = spiritPool[spiritIndex];
+            // -------------------------------------------
+
             const finalNote = `${note} {{Spirit:${spirit.name}}}`;
             const timestamp = new Date(dateInput);
             timestamp.setHours(new Date().getHours(), new Date().getMinutes());
@@ -318,9 +330,9 @@
             
             document.getElementById('spiritGrid').innerHTML = collectedSpirits.map(s => `
                 <div class="bg-sky-900/60 border-sky-400 p-2 rounded-lg text-center border animate-fade-in">
-                    <img src="${getImgUrl(s.img)}" class="w-8 h-8 mx-auto object-contain">
-                    <div class="text-[8px] text-sky-200 mt-1 truncate">${s.name}</div>
-                    <div class="text-[8px] text-gold font-bold">x${counts[s.name]}</div>
+                    <img src="${getImgUrl(s.img)}" class="w-16 h-16 mx-auto object-contain">
+                    <div class="text-xs text-sky-200 mt-2 truncate">${s.name}</div>
+                    <div class="text-xs text-gold font-bold mt-1">x${counts[s.name]}</div>
                 </div>`).join('');
         }
 
