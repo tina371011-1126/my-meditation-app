@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>禪定精靈 - 夥伴共振版</title>
+    <title>禪定精靈 - 全體共振版</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -15,12 +15,18 @@
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .btn-gradient { background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); transition: all 0.3s ease; }
         .btn-disabled { background: #334155 !important; opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+        
+        /* 稀有精靈特效 */
+        .rare-spirit { box-shadow: 0 0 40px rgba(251, 191, 36, 0.6) !important; border-color: #fbbf24 !important; }
+        .legendary-spirit { box-shadow: 0 0 60px rgba(168, 85, 247, 0.7) !important; border-color: #a855f7 !important; animation: pulse-border 2s infinite; }
+        @keyframes pulse-border { 0% { border-color: #a855f7; } 50% { border-color: #f472b6; } 100% { border-color: #a855f7; } }
+
         @keyframes crystal-summon { 0% { transform: scale(1); filter: brightness(1); } 50% { transform: scale(1.2) rotate(10deg); filter: brightness(1.5); } 100% { transform: scale(1.5); opacity: 0; } }
         .crystal-active { animation: crystal-summon 1.2s forwards ease-in; }
-        #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 250; }
+        #particleCanvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 400; }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); }
 
-        /* 新增進度條特效 */
+        /* 進度條特效 */
         @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
         .bar-shimmer { background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%); background-size: 200% 100%; animation: shimmer 2s infinite linear; position: absolute; top: 0; left: 0; width: 100%; height: 100%; mix-blend-mode: overlay; }
     </style>
@@ -32,13 +38,13 @@
         <div id="mainBall" class="w-32 h-32 rounded-full bg-gradient-to-br from-sky-300 to-blue-600 shadow-[0_0_60px_#3b82f6] flex items-center justify-center">
             <span class="text-5xl">🔮</span>
         </div>
-        <p class="mt-12 text-gold font-bold tracking-[0.4em] animate-pulse">正在感應禪定能量...</p>
+        <p class="mt-12 text-gold font-bold tracking-[0.4em] animate-pulse">正在匯聚全體禪定能量...</p>
     </div>
 
     <div id="gachaModal" class="fixed inset-0 z-[300] flex items-center justify-center hidden px-6">
         <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl">
-            <h2 class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 禪定精靈現身 ✨</h2>
+        <div id="gachaCard" class="relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl transition-all duration-500">
+            <h2 id="gachaTitle" class="text-gold font-bold mb-4 text-xl tracking-widest">✨ 禪定精靈現身 ✨</h2>
             <img id="gachaImg" src="" class="w-32 h-32 mx-auto mb-6 object-contain drop-shadow-[0_0_20px_rgba(251,191,36,0.6)]">
             <div id="gachaName" class="text-2xl font-black text-white mb-2"></div>
             <p id="gachaDesc" class="text-xs text-sky-300 mb-8 italic px-4 leading-relaxed"></p>
@@ -49,7 +55,7 @@
     <div class="max-w-md mx-auto space-y-6 pt-2">
         <header class="flex justify-between items-center py-2 px-1">
             <div>
-                <h1 class="text-xl font-black text-sky-200 tracking-wider">禪定精靈打卡版</h1>
+                <h1 class="text-xl font-black text-sky-200 tracking-wider">禪定精靈</h1>
                 <p id="streakDisplay" class="text-[10px] text-gold font-bold mt-1">連結能量中...</p>
             </div>
             <div class="flex items-center gap-3">
@@ -60,37 +66,38 @@
         <div class="glass-card p-5 relative overflow-hidden">
             <div class="flex justify-between items-end mb-2">
                 <div class="flex items-center gap-2">
-                    <span class="text-xl">🎓</span>
+                    <span class="text-xl">🌟</span>
                     <div>
-                        <h2 class="text-sky-200 font-bold text-xs">本學期能量修煉</h2>
-                        <div class="text-[9px] text-sky-400">距離期末超越還需努力</div>
+                        <h2 class="text-sky-200 font-bold text-xs">全體能量修煉進度</h2>
+                        <div class="text-[9px] text-sky-400">集結眾人之心，點亮禪定之光</div>
                     </div>
                 </div>
                 <span id="cultivationRank" class="text-sm text-gold font-black font-mono tracking-wide">計算中...</span>
             </div>
             
-            <div class="relative h-5 bg-sky-950 rounded-full border border-sky-800/50 overflow-hidden shadow-inner">
+            <div class="relative h-6 bg-sky-950 rounded-full border border-sky-800/50 overflow-hidden shadow-inner">
                 <div id="xpBar" class="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-600 via-sky-400 to-amber-300 transition-all duration-1000 ease-out w-0 flex items-center justify-end pr-2">
                    <div class="bar-shimmer"></div>
                 </div>
                 <div class="absolute inset-0 flex justify-between px-3 items-center text-[8px] font-bold text-white/50 z-10">
-                    <span>🌬️ 氣</span>
-                    <span>⚡️ 電</span>
-                    <span>🌞 光</span>
-                    <span>❤️ 自性</span>
+                    <span>🌬️ 練氣</span>
+                    <span>⚡️ 築基</span>
+                    <span>🌞 金丹</span>
+                    <span>❤️ 元神</span>
                 </div>
             </div>
 
             <div class="flex justify-between mt-2 text-[9px]">
-                <span id="currentXp" class="text-sky-300">目前累積: 0 min</span>
-                <span class="text-sky-500">學期目標: 3000 min</span>
+                <span id="currentXp" class="text-sky-300">總能量: 0 min</span>
+                <span class="text-sky-500">最高目標: 72000 min</span>
             </div>
             <div id="flavorText" class="mt-2 text-[10px] text-center text-amber-200/80 italic border-t border-sky-800/30 pt-2">
-                "萬丈高樓平地起，請先從呼吸開始..."
+                "一個人走得快，一群人走得遠..."
             </div>
         </div>
+
         <div class="glass-card p-5">
-            <h2 class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">禪定紀錄月曆</h2>
+            <h2 class="text-center text-sm font-bold mb-4 text-sky-200 border-b border-sky-800/50 pb-2">我的禪定月曆</h2>
             <div class="grid grid-cols-7 gap-1 text-center text-[9px] text-sky-500 mb-2">
                 <div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div>
             </div>
@@ -101,7 +108,7 @@
             <h2 class="font-bold text-sky-200 text-sm ml-2 flex justify-between items-center">
                 <span class="flex items-center gap-2">
                     <span class="w-2 h-2 bg-gold rounded-full animate-pulse"></span> 
-                    <span id="selectedDateText">🍃 我的專屬紀錄</span>
+                    <span id="selectedDateText">🍃 個人紀錄</span>
                 </span>
                 <button onclick="hidePersonal()" class="text-[10px] text-sky-500 px-2">關閉 ✕</button>
             </h2>
@@ -110,7 +117,7 @@
 
         <div class="glass-card p-6 space-y-4">
             <h2 class="font-bold text-sky-200 text-sm border-b border-sky-800/50 pb-2 flex items-center gap-2">
-                <span>🧘 進行禪定打卡</span>
+                <span>🧘 打卡匯聚能量</span>
             </h2>
             <div class="grid grid-cols-12 gap-6">
                 <div class="col-span-7 space-y-1">
@@ -119,27 +126,27 @@
                 </div>
                 <div class="col-span-5 space-y-1">
                     <label class="text-[10px] text-sky-400 ml-1">分鐘</label>
-                    <input type="number" id="minutes" oninput="validateForm()" placeholder="需至少10分鐘" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
+                    <input type="number" id="minutes" oninput="validateForm()" placeholder="≥ 10min" class="w-full p-2.5 text-xs rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none">
                 </div>
             </div>
             <textarea id="note" oninput="validateForm()" placeholder="此刻的心得..." class="w-full p-3 text-xs h-20 rounded-xl bg-sky-900/40 border border-sky-700/50 text-white outline-none resize-none"></textarea>
             
             <button id="saveBtn" onclick="triggerSummon()" disabled class="w-full btn-gradient btn-disabled py-4 rounded-xl font-bold text-white shadow-lg flex items-center justify-center gap-2">
-                <span>匯聚禪定能量 ‧ 召喚精靈</span>
+                <span>匯聚能量 ‧ 召喚精靈</span>
                 <span id="btnIcon">🔒</span>
             </button>
         </div>
 
         <div class="glass-card p-5">
             <h2 class="font-bold mb-4 text-sm text-sky-300 flex justify-between items-center">
-                <span>📚 已收集精靈</span>
+                <span>📚 我的精靈圖鑑</span>
                 <span id="collectionCount" class="text-[10px] bg-sky-900 px-2 py-1 rounded text-gold">0/20</span>
             </h2>
             <div id="spiritGrid" class="grid grid-cols-4 gap-3"></div>
         </div>
 
         <div class="glass-card p-5">
-            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2">🏆 禪定能量排行</h2>
+            <h2 class="font-bold mb-3 text-sky-200 text-sm border-b border-sky-800/50 pb-2">🏆 能量排行榜</h2>
             <div id="leaderboard" class="space-y-2"></div>
         </div>
 
@@ -184,7 +191,6 @@
             { name: '萬法歸一', desc: '宇宙萬物，本自一體，回歸最初的純粹。', img: '20.png' }
         ];
 
-        // 修正為正確的 Raw 連結
         const getImgUrl = (fileName) => `https://raw.githubusercontent.com/tina371011-1126/zen-spirit-assets-20-/refs/heads/main/${fileName}`;
         let currentUser = "";
         let logsData = [];
@@ -193,8 +199,7 @@
             const todayStr = new Date().toLocaleDateString('en-CA');
             const dateInput = document.getElementById('recordDate');
             dateInput.value = todayStr;
-            dateInput.max = todayStr; // 卡控：明天以後日期反灰
-
+            dateInput.max = todayStr;
             const { data: { session } } = await client.auth.getSession();
             updateAuth(session);
             client.auth.onAuthStateChange((_e, session) => updateAuth(session));
@@ -207,10 +212,6 @@
                 overlay.classList.add('hidden');
                 currentUser = session.user.user_metadata.full_name || "禪定勇者";
                 document.getElementById('userAvatar').src = session.user.user_metadata.avatar_url;
-                const urlParams = new URLSearchParams(window.location.search);
-                if(urlParams.get('remind') === currentUser) {
-                    setTimeout(() => alert(`🔔 夥伴呼喚：${currentUser}，今日能量尚未更新，快來禪定吧！`), 1000);
-                }
                 fetchData();
             } else { overlay.classList.remove('hidden'); }
         }
@@ -231,29 +232,25 @@
             renderLeaderboard(); 
             renderLogs(); 
             updateStreak(); 
-            renderSemesterProgress(); // 新增：渲染進度條
+            renderSemesterProgress(); 
         }
 
-        // 新增：進度條渲染邏輯
+        // 修改為全體共用累積邏輯
         function renderSemesterProgress() {
-            const myLogs = logsData.filter(l => l.username === currentUser);
-            // 這裡假設只計算最近 4 個月或所有時間的累積，為了簡單有趣，我們先計算總累積
-            // 若要嚴格 4 個月，可加入日期篩選
-            const totalMinutes = myLogs.reduce((acc, curr) => acc + curr.minutes, 0);
-            const semesterGoal = 3000; // 學期目標：3000分鐘 (約每天25分鐘 x 4個月)
-            
+            const totalMinutes = logsData.reduce((acc, curr) => acc + curr.minutes, 0); // 全體累積
+            const semesterGoal = 72000; // 修改目標為 72000
             const percentage = Math.min((totalMinutes / semesterGoal) * 100, 100).toFixed(1);
+            
             document.getElementById('xpBar').style.width = `${percentage}%`;
-            document.getElementById('currentXp').innerText = `目前累積: ${totalMinutes} min`;
+            document.getElementById('currentXp').innerText = `總能量累積: ${totalMinutes} min`;
             
-            // 修仙等級判定
-            let rank = "🌱 練氣期";
-            let flavor = "萬丈高樓平地起，先從呼吸開始...";
+            let rank = "🌱 練氣階段";
+            let flavor = "萬事起頭難，全體夥伴正在凝聚第一縷正氣...";
             
-            if (totalMinutes >= 500) { rank = "🌬️ 入門選手"; flavor = "根基漸穩，考試的時候心比較不會慌了吧？"; }
-            if (totalMinutes >= 1500) { rank = "⚡️ 穩固高手"; flavor = "體內能量可以集中精神，報告寫不出來也能心如止水。"; }
-            if (totalMinutes >= 2500) { rank = "🌞 小有成就"; flavor = "精神力大幅提升，已經可以一邊禪定一邊思考微積分了！"; }
-            if (totalMinutes >= semesterGoal) { rank = "✨ 突破超越"; flavor = "太厲害了！這學期的你，已經是傳說中的存在。"; }
+            if (totalMinutes >= 10000) { rank = "🌬️ 築基中階"; flavor = "根基初顯，大家一起努力讓能量更上一層樓！"; }
+            if (totalMinutes >= 30000) { rank = "⚡️ 金丹初成"; flavor = "強大的能量場正在形成，夥伴們的定力大幅提升。"; }
+            if (totalMinutes >= 50000) { rank = "🌞 元神顯化"; flavor = "光芒四射！禪定的共鳴已經引起了宇宙的關注。"; }
+            if (totalMinutes >= semesterGoal) { rank = "✨ 涅槃超越"; flavor = "圓滿達成！我們共同創造了不可思議的能量里程碑。"; }
             
             document.getElementById('cultivationRank').innerText = rank;
             document.getElementById('flavorText').innerText = `"${flavor}"`;
@@ -264,7 +261,6 @@
             overlay.classList.remove('hidden');
             document.getElementById('mainBall').classList.add('crystal-active');
             setTimeout(() => {
-                createExplosion(window.innerWidth/2, window.innerHeight/2);
                 overlay.classList.add('hidden');
                 document.getElementById('mainBall').classList.remove('crystal-active');
                 saveRecord(); 
@@ -272,17 +268,27 @@
         }
 
         async function saveRecord() {
-            const mins = document.getElementById('minutes').value;
+            const mins = parseInt(document.getElementById('minutes').value) || 0;
             const note = document.getElementById('note').value;
             const dateInput = document.getElementById('recordDate').value;
             
-            // ---------- 抽籤機率調整 (維持不變) ----------
+            // ---------- 抽籤機率與時間深度掛鉤 ----------
             const rand = Math.random();
+            const luckBonus = Math.min(mins / 120, 0.45); // 禪定120分鐘可獲得45%機率位移
+
+            // 基礎分布差距擴大
+            // 普通 0-0.85 (85%)
+            // 優秀 0.85-0.96 (11%)
+            // 稀有 0.96-0.993 (3.3%)
+            // 傳說 0.993-1.0 (0.7%)
+            
+            let roll = rand + luckBonus;
             let groupIndex = 0;
-            if (rand < 0.50) groupIndex = 0;
-            else if (rand < 0.80) groupIndex = 1;
-            else if (rand < 0.95) groupIndex = 2;
+            if (roll < 0.85) groupIndex = 0;
+            else if (roll < 0.96) groupIndex = 1;
+            else if (roll < 0.993) groupIndex = 2;
             else groupIndex = 3;
+
             const spiritIndex = (groupIndex * 5) + Math.floor(Math.random() * 5);
             const spirit = spiritPool[spiritIndex];
             // -------------------------------------------
@@ -291,22 +297,48 @@
             const timestamp = new Date(dateInput);
             timestamp.setHours(new Date().getHours(), new Date().getMinutes());
 
-            // 修正傳輸失敗：補上 coins 欄位
             const { error } = await client.from('meditation_logs').insert([{ 
                 username: currentUser, 
-                minutes: parseInt(mins), 
+                minutes: mins, 
                 note: finalNote, 
                 created_at: timestamp.toISOString(),
                 coins: 10 
             }]);
 
             if (!error) {
-                document.getElementById('gachaImg').src = getImgUrl(spirit.img);
-                document.getElementById('gachaName').innerText = spirit.name;
-                document.getElementById('gachaDesc').innerText = spirit.desc;
-                document.getElementById('gachaModal').classList.remove('hidden');
+                showGachaResult(spirit, groupIndex);
                 await fetchData();
             } else { alert(`傳輸失敗：${error.message}`); }
+        }
+
+        function showGachaResult(spirit, groupIndex) {
+            const card = document.getElementById('gachaCard');
+            const title = document.getElementById('gachaTitle');
+            
+            // 重置樣式
+            card.className = "relative glass-card p-8 w-full max-w-sm text-center border-2 border-gold shadow-2xl transition-all duration-500";
+            title.innerText = "✨ 禪定精靈現身 ✨";
+            title.className = "text-gold font-bold mb-4 text-xl tracking-widest";
+
+            // 根據稀有度添加特效
+            if (groupIndex === 2) {
+                card.classList.add('rare-spirit');
+                title.innerText = "🌟 稀有精靈降臨 🌟";
+                title.classList.add('animate-pulse');
+                createExplosion(window.innerWidth/2, window.innerHeight/2, '#fbbf24', 80);
+            } else if (groupIndex === 3) {
+                card.classList.add('legendary-spirit');
+                title.innerText = "💎 傳說精靈覺醒 💎";
+                title.className = "text-purple-400 font-black mb-4 text-xl tracking-widest animate-bounce";
+                createExplosion(window.innerWidth/2, window.innerHeight/2, '#a855f7', 150);
+            } else {
+                createExplosion(window.innerWidth/2, window.innerHeight/2, '#3b82f6', 30);
+            }
+
+            document.getElementById('gachaImg').src = getImgUrl(spirit.img);
+            document.getElementById('gachaName').innerText = spirit.name;
+            document.getElementById('gachaDesc').innerText = spirit.desc;
+            document.getElementById('gachaModal').classList.remove('hidden');
         }
 
         function closeGacha() {
@@ -323,16 +355,13 @@
                 const m = l.note.match(/{{Spirit:(.*?)}}/); 
                 if(m) counts[m[1]] = (counts[m[1]]||0)+1; 
             });
-            
-            // 邏輯修正：沒蒐集到的不顯示
             const collectedSpirits = spiritPool.filter(s => counts[s.name]);
             document.getElementById('collectionCount').innerText = `${collectedSpirits.length}/20`;
-            
             document.getElementById('spiritGrid').innerHTML = collectedSpirits.map(s => `
                 <div class="bg-sky-900/60 border-sky-400 p-2 rounded-lg text-center border animate-fade-in">
                     <img src="${getImgUrl(s.img)}" class="w-16 h-16 mx-auto object-contain">
-                    <div class="text-xs text-sky-200 mt-2 truncate">${s.name}</div>
-                    <div class="text-xs text-gold font-bold mt-1">x${counts[s.name]}</div>
+                    <div class="text-[10px] text-sky-200 mt-2 truncate">${s.name}</div>
+                    <div class="text-[10px] text-gold font-bold mt-1">x${counts[s.name]}</div>
                 </div>`).join('');
         }
 
@@ -342,7 +371,6 @@
             const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
             const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
             for (let i = 0; i < firstDay; i++) grid.innerHTML += '<div></div>';
-            
             const myLogs = logsData.filter(l => l.username === currentUser);
             for (let i = 1; i <= daysInMonth; i++) {
                 const hasRecord = myLogs.some(l => new Date(l.created_at).getDate() === i);
@@ -356,12 +384,11 @@
 
         function showDayDetail(day, hasRecord) {
             const now = new Date();
-            const today = now.getDate();
             if (hasRecord) {
                 const filtered = logsData.filter(l => l.username === currentUser && new Date(l.created_at).getDate() === day);
                 const section = document.getElementById('personalSection');
                 section.classList.remove('hidden');
-                document.getElementById('selectedDateText').innerText = `🍃 ${day}日 的專屬禪定紀錄`;
+                document.getElementById('selectedDateText').innerText = `🍃 ${day}日 個人紀錄`;
                 document.getElementById('personalSlider').innerHTML = filtered.map(l => {
                     const cleanNote = l.note.replace(/{{Spirit:.*?}}/g, '');
                     return `
@@ -376,13 +403,6 @@
                         <div class="text-[12px] text-sky-100 leading-relaxed italic">"${cleanNote}"</div>
                     </div>`;
                 }).join('');
-            } else {
-                // 日期卡控：未來 vs 過去
-                if (day > today) {
-                    alert("這天還沒到喔！🌟");
-                } else {
-                    alert("這天偷懶囉！😴");
-                }
             }
         }
 
@@ -406,9 +426,9 @@
             const note = document.getElementById('note').value;
             const { error } = await client.from('meditation_logs').update({ minutes: parseInt(mins), note: note }).eq('id', id);
             if (!error) {
-                alert("禪定紀錄修正成功！");
+                alert("紀錄修正成功！");
                 document.getElementById('saveBtn').setAttribute('onclick', "triggerSummon()");
-                document.getElementById('saveBtn').innerHTML = "<span>匯聚禪定能量 ‧ 召喚精靈</span><span id='btnIcon'>💠</span>";
+                document.getElementById('saveBtn').innerHTML = "<span>匯聚能量 ‧ 召喚精靈</span><span id='btnIcon'>🧞</span>";
                 document.getElementById('minutes').value = '';
                 document.getElementById('note').value = '';
                 hidePersonal(); fetchData();
@@ -420,10 +440,8 @@
             const note = document.getElementById('note').value.trim();
             const dateInput = document.getElementById('recordDate').value;
             const btn = document.getElementById('saveBtn');
-            
             const todayStr = new Date().toLocaleDateString('en-CA');
             const isFuture = dateInput > todayStr;
-
             btn.disabled = !(mins >= 10 && note.length > 0 && !isFuture);
             btn.classList.toggle('btn-disabled', btn.disabled);
             document.getElementById('btnIcon').innerText = btn.disabled ? '🔒' : '🧞';
@@ -447,7 +465,7 @@
         function remindPartner(targetName) {
             const baseUrl = window.location.href.split('?')[0];
             const remindUrl = `${baseUrl}?remind=${encodeURIComponent(targetName)}`;
-            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n今日尚未禪定，快回來搜集能量吧！✨\n點擊進入：${remindUrl}`);
+            const text = encodeURIComponent(`🧘 禪定夥伴呼喚：${targetName}！\n全體能量目標達成還差一點，快回來禪定吧！✨\n點擊進入：${remindUrl}`);
             window.open(`https://line.me/R/msg/text/?${text}`);
         }
 
@@ -474,16 +492,26 @@
             let streak = 0; let check = new Date();
             if (dates[0] !== check.toDateString()) check.setDate(check.getDate() - 1);
             while (dates.includes(check.toDateString())) { streak++; check.setDate(check.getDate() - 1); }
-            document.getElementById('streakDisplay').innerText = `🔥 已連續禪定 ${streak} 天 | 能量充盈`;
+            document.getElementById('streakDisplay').innerText = `🔥 連續禪定 ${streak} 天 | 個人狀態：清明`;
         }
 
         function hidePersonal() { document.getElementById('personalSection').classList.add('hidden'); }
 
-        // 粒子背景特效
         let canvas, ctx, particles = [];
         function initParticles() { canvas = document.getElementById('particleCanvas'); ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        class Particle { constructor(x, y) { this.x = x; this.y = y; this.size = Math.random()*5+2; this.speedX = (Math.random()-0.5)*15; this.speedY = (Math.random()-0.5)*15; this.opacity = 1; } update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.025; } draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); } }
-        function createExplosion(x, y) { for(let i=0; i<50; i++) particles.push(new Particle(x, y)); animateParticles(); }
+        class Particle { 
+            constructor(x, y, color) { 
+                this.x = x; this.y = y; 
+                this.size = Math.random()*6+2; 
+                this.speedX = (Math.random()-0.5)*18; 
+                this.speedY = (Math.random()-0.5)*18; 
+                this.opacity = 1; 
+                this.color = color;
+            } 
+            update() { this.x += this.speedX; this.y += this.speedY; this.opacity -= 0.02; } 
+            draw() { ctx.globalAlpha = this.opacity; ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill(); } 
+        }
+        function createExplosion(x, y, color, count) { for(let i=0; i<count; i++) particles.push(new Particle(x, y, color)); animateParticles(); }
         function animateParticles() { ctx.clearRect(0,0,canvas.width,canvas.height); particles = particles.filter(p => p.opacity > 0); particles.forEach(p => { p.update(); p.draw(); }); if(particles.length) requestAnimationFrame(animateParticles); }
 
         init();
