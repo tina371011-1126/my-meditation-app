@@ -216,7 +216,18 @@
             } else { overlay.classList.remove('hidden'); }
         }
 
-        async function handleGoogleLogin() { await client.auth.signInWithOAuth({ provider: 'google' }); }
+        async function handleGoogleLogin() {
+            await client.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    // 強制 Google 顯示帳號選擇器
+                    queryParams: {
+                        prompt: 'select_account',
+                        access_type: 'offline', // 如果你未來需要獲取 Refresh Token 建議加上
+                    }
+                }
+            });
+        }
         function logout() { if(confirm('確定要登出嗎？')) client.auth.signOut().then(()=>location.reload()); }
 
         async function fetchData() {
